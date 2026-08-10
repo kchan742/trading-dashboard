@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day-Trading Behavioral Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+/* @license
+Papa Parse
+v5.5.4
+https://github.com/mholt/PapaParse
+License: MIT
+*/
+((e,t)=>{"function"==typeof define&&define.amd?define([],t):"object"==typeof module&&"undefined"!=typeof exports?module.exports=t():e.Papa=t()})(this,function r(){var n="undefined"!=typeof self?self:"undefined"!=typeof window?window:void 0!==n?n:{};var d,s=!n.document&&!!n.postMessage,a=n.IS_PAPA_WORKER||!1,o={},h=0,v={};function P(e){return 65279===e.charCodeAt(0)?e.slice(1):e}function u(e){this._handle=null,this._finished=!1,this._completed=!1,this._halted=!1,this._input=null,this._baseIndex=0,this._partialLine="",this._rowCount=0,this._start=0,this._nextChunk=null,this.isFirstChunk=!0,this._completeResults={data:[],errors:[],meta:{}},function(e){var t=b(e);t.chunkSize=parseInt(t.chunkSize),e.step||e.chunk||(t.chunkSize=null);this._handle=new i(t),(this._handle.streamer=this)._config=t}.call(this,e),this.parseChunk=function(t,e){var i=parseInt(this._config.skipFirstNLines)||0;if(this.isFirstChunk&&0<i){let e=this._config.newline;e||(r=this._config.quoteChar||'"',e=this._handle.guessLineEndings(t,r)),t=[...t.split(e).slice(i)].join(e)}this.isFirstChunk&&q(this._config.beforeFirstChunk)&&void 0!==(r=this._config.beforeFirstChunk(t))&&(t=r),this.isFirstChunk=!1,this._halted=!1;var i=this._partialLine+t,r=(this._partialLine="",this._handle.parse(i,this._baseIndex,!this._finished));if(!this._handle.paused()&&!this._handle.aborted()){t=r.meta.cursor,i=(this._finished||(this._partialLine=i.substring(t-this._baseIndex),this._baseIndex=t),r&&r.data&&(this._rowCount+=r.data.length),this._finished||this._config.preview&&this._rowCount>=this._config.preview);if(a)n.postMessage({results:r,workerId:v.WORKER_ID,finished:i});else if(q(this._config.chunk)&&!e){if(this._config.chunk(r,this._handle),this._handle.paused()||this._handle.aborted())return void(this._halted=!0);this._completeResults=r=void 0}return this._config.step||this._config.chunk||(this._completeResults.data=this._completeResults.data.concat(r.data),this._completeResults.errors=this._completeResults.errors.concat(r.errors),this._completeResults.meta=r.meta),this._completed||!i||!q(this._config.complete)||r&&r.meta.aborted||(this._config.complete(this._completeResults,this._input),this._completed=!0),i||r&&r.meta.paused||this._nextChunk(),r}this._halted=!0},this._sendError=function(e){q(this._config.error)?this._config.error(e):a&&this._config.error&&n.postMessage({workerId:v.WORKER_ID,error:e,finished:!1})}}function f(e){var r;(e=e||{}).chunkSize||(e.chunkSize=v.RemoteChunkSize),u.call(this,e),this._nextChunk=s?function(){this._readChunk(),this._chunkLoaded()}:function(){this._readChunk()},this.stream=function(e){this._input=e,this._nextChunk()},this._readChunk=function(){if(this._finished)this._chunkLoaded();else{if(r=new XMLHttpRequest,this._config.withCredentials&&(r.withCredentials=this._config.withCredentials),s||(r.onload=y(this._chunkLoaded,this),r.onerror=y(this._chunkError,this)),r.open(this._config.downloadRequestBody?"POST":"GET",this._input,!s),this._config.downloadRequestHeaders){var e,t=this._config.downloadRequestHeaders;for(e in t)r.setRequestHeader(e,t[e])}var i;this._config.chunkSize&&(i=this._start+this._config.chunkSize-1,r.setRequestHeader("Range","bytes="+this._start+"-"+i));try{r.send(this._config.downloadRequestBody)}catch(e){this._chunkError(e.message)}s&&0===r.status&&this._chunkError()}},this._chunkLoaded=function(){4===r.readyState&&(r.status<200||400<=r.status?this._chunkError():(this._start+=this._config.chunkSize||r.responseText.length,this._finished=!this._config.chunkSize||this._start>=(e=>null!==(e=e.getResponseHeader("Content-Range"))?parseInt(e.substring(e.lastIndexOf("/")+1)):-1)(r),this.parseChunk(r.responseText)))},this._chunkError=function(e){e=r.statusText||e;this._sendError(new Error(e))}}function l(e){(e=e||{}).chunkSize||(e.chunkSize=v.LocalChunkSize),u.call(this,e);var i,r,n="undefined"!=typeof FileReader;this.stream=function(e){this._input=e,r=e.slice||e.webkitSlice||e.mozSlice,n?((i=new FileReader).onload=y(this._chunkLoaded,this),i.onerror=y(this._chunkError,this)):i=new FileReaderSync,this._nextChunk()},this._nextChunk=function(){this._finished||this._config.preview&&!(this._rowCount<this._config.preview)||this._readChunk()},this._readChunk=function(){var e=this._input,t=(this._config.chunkSize&&(t=Math.min(this._start+this._config.chunkSize,this._input.size),e=r.call(e,this._start,t)),i.readAsText(e,this._config.encoding));n||this._chunkLoaded({target:{result:t}})},this._chunkLoaded=function(e){this._start+=this._config.chunkSize,this._finished=!this._config.chunkSize||this._start>=this._input.size,this.parseChunk(e.target.result)},this._chunkError=function(){this._sendError(i.error)}}function c(e){var i;u.call(this,e=e||{}),this.stream=function(e){return i=e,this._nextChunk()},this._nextChunk=function(){var e,t;if(!this._finished)return e=this._config.chunkSize,i=e?(t=i.substring(0,e),i.substring(e)):(t=i,""),this._finished=!i,this.parseChunk(t)}}function p(e){u.call(this,e=e||{});var t=[],i=!0,r=!1;this.pause=function(){u.prototype.pause.apply(this,arguments),this._input.pause()},this.resume=function(){u.prototype.resume.apply(this,arguments),this._input.resume()},this.stream=function(e){this._input=e,this._input.on("data",this._streamData),this._input.on("end",this._streamEnd),this._input.on("error",this._streamError)},this._checkIsFinished=function(){r&&1===t.length&&(this._finished=!0)},this._nextChunk=function(){this._checkIsFinished(),t.length?this.parseChunk(t.shift()):i=!0},this._streamData=y(function(e){try{t.push("string"==typeof e?e:e.toString(this._config.encoding)),i&&(i=!1,this._checkIsFinished(),this.parseChunk(t.shift()))}catch(e){this._streamError(e)}},this),this._streamError=y(function(e){this._streamCleanUp(),this._sendError(e)},this),this._streamEnd=y(function(){this._streamCleanUp(),r=!0,this._streamData("")},this),this._streamCleanUp=y(function(){this._input.removeListener("data",this._streamData),this._input.removeListener("end",this._streamEnd),this._input.removeListener("error",this._streamError)},this)}function i(m){var n,s,a,t,o=Math.pow(2,53),h=-o,u=/^\s*-?(\d+\.?|\.\d+|\d+\.\d+)([eE][-+]?\d+)?\s*$/,d=/^((\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)))$/,i=this,r=0,f=0,l=!1,e=!1,c=[],p={data:[],errors:[],meta:{}};function y(e){return"greedy"===m.skipEmptyLines?""===e.join("").trim():1===e.length&&0===e[0].length}function g(){if(p&&a&&(k("Delimiter","UndetectableDelimiter","Unable to auto-detect delimiting character; defaulted to '"+v.DefaultDelimiter+"'"),a=!1),m.skipEmptyLines&&(p.data=p.data.filter(function(e){return!y(e)})),_()){if(p)if(Array.isArray(p.data[0])){for(var e=0;_()&&e<p.data.length;e++)p.data[e].forEach(t);p.data.splice(0,1)}else p.data.forEach(t);function t(e,t){e=P(e),q(m.transformHeader)&&(e=m.transformHeader(e,t)),c.push(e)}}function i(e,t){for(var i=m.header?{}:[],r=0;r<e.length;r++){var n=r,s=e[r],s=((e,t)=>(e=>(m.dynamicTypingFunction&&void 0===m.dynamicTyping[e]&&(m.dynamicTyping[e]=m.dynamicTypingFunction(e)),!0===(m.dynamicTyping[e]||m.dynamicTyping)))(e)?"true"===t||"TRUE"===t||"false"!==t&&"FALSE"!==t&&((e=>{if(u.test(e)){e=parseFloat(e);if(h<e&&e<o)return 1}})(t)?parseFloat(t):d.test(t)?new Date(t):""===t?null:t):t)(n=m.header?r>=c.length?"__parsed_extra":c[r]:n,s=m.transform?m.transform(s,n):s);"__parsed_extra"===n?(i[n]=i[n]||[],i[n].push(s)):i[n]=s}return m.header&&(r>c.length?k("FieldMismatch","TooManyFields","Too many fields: expected "+c.length+" fields but parsed "+r,f+t):r<c.length&&k("FieldMismatch","TooFewFields","Too few fields: expected "+c.length+" fields but parsed "+r,f+t)),i}var r;p&&(m.header||m.dynamicTyping||m.transform)&&(r=1,!p.data.length||Array.isArray(p.data[0])?(p.data=p.data.map(i),r=p.data.length):p.data=i(p.data,0),m.header&&p.meta&&(p.meta.fields=c),f+=r)}function _(){return m.header&&0===c.length}function k(e,t,i,r){e={type:e,code:t,message:i};void 0!==r&&(e.row=r),p.errors.push(e)}q(m.step)&&(t=m.step,m.step=function(e){p=e,_()?g():(g(),0!==p.data.length&&(r+=e.data.length,m.preview&&r>m.preview?s.abort():(p.data=p.data[0],t(p,i))))}),this.parse=function(e,t,i){var r=m.quoteChar||'"',r=(m.newline||(m.newline=this.guessLineEndings(e,r)),a=!1,m.delimiter?q(m.delimiter)&&(m.delimiter=m.delimiter(e),p.meta.delimiter=m.delimiter):((r=((e,t,i,r,n)=>{var s,a,o,h;n=n||[",","\t","|",";",v.RECORD_SEP,v.UNIT_SEP];for(var u=0;u<n.length;u++){for(var d,f=n[u],l=0,c=0,p=0,g=(o=void 0,new E({comments:r,delimiter:f,newline:t,preview:10}).parse(e)),_=0;_<g.data.length;_++)i&&y(g.data[_])?p++:(d=g.data[_].length,c+=d,void 0===o?o=d:0<d&&(l+=Math.abs(d-o),o=d));0<g.data.length&&(c/=g.data.length-p),(void 0===a||l<=a)&&(void 0===h||h<c)&&1.99<c&&(a=l,s=f,h=c)}return{successful:!!(m.delimiter=s),bestDelimiter:s}})(e,m.newline,m.skipEmptyLines,m.comments,m.delimitersToGuess)).successful?m.delimiter=r.bestDelimiter:(a=!0,m.delimiter=v.DefaultDelimiter),p.meta.delimiter=m.delimiter),b(m));return m.preview&&m.header&&r.preview++,n=e,s=new E(r),p=s.parse(n,t,i),g(),l?{meta:{paused:!0}}:p||{meta:{paused:!1}}},this.paused=function(){return l},this.pause=function(){l=!0,s.abort(),n=q(m.chunk)?"":n.substring(s.getCharIndex())},this.resume=function(){i.streamer._halted?(l=!1,i.streamer.parseChunk(n,!0)):setTimeout(i.resume,3)},this.aborted=function(){return e},this.abort=function(){e=!0,s.abort(),p.meta.aborted=!0,q(m.complete)&&m.complete(p),n=""},this.guessLineEndings=function(e,t){e=e.substring(0,1048576);var t=new RegExp(U(t)+"([^]*?)"+U(t),"gm"),i=(e=e.replace(t,"")).split("\r"),t=e.split("\n"),e=1<t.length&&t[0].length<i[0].length;if(1===i.length||e)return"\n";for(var r=0,n=0;n<i.length;n++)"\n"===i[n][0]&&r++;return r>=i.length/2?"\r\n":"\r"}}function U(e){return e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}function E(C){var S=(C=C||{}).delimiter,O=C.newline,x=C.comments,I=C.step,A=C.preview,T=C.fastMode,D=null,L=!1,F=null==C.quoteChar?'"':C.quoteChar,j=F;if(void 0!==C.escapeChar&&(j=C.escapeChar),("string"!=typeof S||-1<v.BAD_DELIMITERS.indexOf(S))&&(S=","),x===S)throw new Error("Comment character same as delimiter");!0===x?x="#":("string"!=typeof x||-1<v.BAD_DELIMITERS.indexOf(x))&&(x=!1),"\n"!==O&&"\r"!==O&&"\r\n"!==O&&(O="\n");var z=0,M=!1;this.parse=function(i,t,r){if("string"!=typeof i)throw new Error("Input must be a string");var n=i.length,e=S.length,s=O.length,a=x.length,o=q(I),h=[],u=[],d=[],f=z=0;if(!i)return w();if(T||!1!==T&&-1===i.indexOf(F)){for(var l=i.split(O),c=0;c<l.length;c++){if(d=l[c],z+=d.length,c!==l.length-1)z+=O.length;else if(r)return w();if(!x||d.substring(0,a)!==x){if(o){if(h=[],k(d.split(S)),R(),M)return w()}else k(d.split(S));if(A&&A<=c)return h=h.slice(0,A),w(!0)}}return w()}for(var p=i.indexOf(S,z),g=i.indexOf(O,z),_=new RegExp(U(j)+U(F),"g"),m=i.indexOf(F,z);;)if(i[z]===F)for(m=z,z++;;){if(-1===(m=i.indexOf(F,m+1)))return r||u.push({type:"Quotes",code:"MissingQuotes",message:"Quoted field unterminated",row:h.length,index:z}),E();if(m===n-1)return E(i.substring(z,m).replace(_,F));if(F===j&&i[m+1]===j)m++;else if(F===j||0===m||i[m-1]!==j){-1!==p&&p<m+1&&(p=i.indexOf(S,m+1));var y=v(-1===(g=-1!==g&&g<m+1?i.indexOf(O,m+1):g)?p:Math.min(p,g));if(i.substr(m+1+y,e)===S){d.push(i.substring(z,m).replace(_,F)),i[z=m+1+y+e]!==F&&(m=i.indexOf(F,z)),p=i.indexOf(S,z),g=i.indexOf(O,z);break}y=v(g);if(i.substring(m+1+y,m+1+y+s)===O){if(d.push(i.substring(z,m).replace(_,F)),b(m+1+y+s),p=i.indexOf(S,z),m=i.indexOf(F,z),o&&(R(),M))return w();if(A&&h.length>=A)return w(!0);break}u.push({type:"Quotes",code:"InvalidQuotes",message:"Trailing quote on quoted field is malformed",row:h.length,index:z}),m++}}else if(x&&0===d.length&&i.substring(z,z+a)===x){if(-1===g)return w();z=g+s,g=i.indexOf(O,z),p=i.indexOf(S,z)}else if(-1!==p&&(p<g||-1===g))d.push(i.substring(z,p)),z=p+e,p=i.indexOf(S,z);else{if(-1===g)break;if(d.push(i.substring(z,g)),b(g+s),o&&(R(),M))return w();if(A&&h.length>=A)return w(!0)}return E();function k(e){h.push(e),f=z}function v(e){var t=0;return t=-1!==e&&(e=i.substring(m+1,e))&&""===e.trim()?e.length:t}function E(e){return r||(void 0===e&&(e=i.substring(z)),d.push(e),z=n,k(d),o&&R()),w()}function b(e){z=e,k(d),d=[],g=i.indexOf(O,z)}function w(e){if(C.header&&!t&&h.length&&!L){var s=h[0],a=Object.create(null),o=new Set(s);let n=!1;for(let r=0;r<s.length;r++){let i=P(s[r]);if(a[i=q(C.transformHeader)?C.transformHeader(i,r):i]){let e,t=a[i];for(;e=i+"_"+t,t++,o.has(e););o.add(e),s[r]=e,a[i]++,n=!0,(D=null===D?{}:D)[e]=i}else a[i]=1,s[r]=i;o.add(i)}n&&console.warn("Duplicate headers found and renamed."),L=!0}return{data:h,errors:u,meta:{delimiter:S,linebreak:O,aborted:M,truncated:!!e,cursor:f+(t||0),renamedHeaders:D}}}function R(){I(w()),h=[],u=[]}},this.abort=function(){M=!0},this.getCharIndex=function(){return z}}function g(e){var t=e.data,i=o[t.workerId],r=!1;if(t.error)i.userError(t.error,t.file);else if(t.results&&t.results.data){var n={abort:function(){r=!0,_(t.workerId,{data:[],errors:[],meta:{aborted:!0}})},pause:m,resume:m};if(q(i.userStep)){for(var s=0;s<t.results.data.length&&(i.userStep({data:t.results.data[s],errors:t.results.errors,meta:t.results.meta},n),!r);s++);delete t.results}else q(i.userChunk)&&(i.userChunk(t.results,n,t.file),delete t.results)}t.finished&&!r&&_(t.workerId,t.results)}function _(e,t){var i=o[e];q(i.userComplete)&&i.userComplete(t),i.terminate(),delete o[e]}function m(){throw new Error("Not implemented.")}function b(e){if("object"!=typeof e||null===e)return e;var t,i=Array.isArray(e)?[]:{};for(t in e)i[t]=b(e[t]);return i}function y(e,t){return function(){e.apply(t,arguments)}}function q(e){return"function"==typeof e}return v.parse=function(e,t){var i=(t=t||{}).dynamicTyping||!1;q(i)&&(t.dynamicTypingFunction=i,i={});if(t.dynamicTyping=i,t.transform=!!q(t.transform)&&t.transform,!t.worker||!v.WORKERS_SUPPORTED)return i=null,v.NODE_STREAM_INPUT,"string"==typeof e?(e=P(e),i=new(t.download?f:c)(t)):!0===e.readable&&q(e.read)&&q(e.on)?i=new p(t):(n.File&&e instanceof File||e instanceof Object)&&(i=new l(t)),i.stream(e);(i=(()=>{var e;return!!v.WORKERS_SUPPORTED&&(e=(()=>{var e=n.URL||n.webkitURL||null,t=r.toString();return v.BLOB_URL||(v.BLOB_URL=e.createObjectURL(new Blob(["var global = (function() { if (typeof self !== 'undefined') { return self; } if (typeof window !== 'undefined') { return window; } if (typeof global !== 'undefined') { return global; } return {}; })(); global.IS_PAPA_WORKER=true; ","(",t,")();"],{type:"text/javascript"})))})(),(e=new n.Worker(e)).onmessage=g,e.id=h++,o[e.id]=e)})()).userStep=t.step,i.userChunk=t.chunk,i.userComplete=t.complete,i.userError=t.error,t.step=q(t.step),t.chunk=q(t.chunk),t.complete=q(t.complete),t.error=q(t.error),delete t.worker,i.postMessage({input:e,config:t,workerId:i.id})},v.unparse=function(e,t){var s=!1,_=!0,m=",",y="\r\n",a='"',o=a+a,i=!1,r=null,h=!1,u=((()=>{if("object"==typeof t){if("string"!=typeof t.delimiter||v.BAD_DELIMITERS.filter(function(e){return-1!==t.delimiter.indexOf(e)}).length||(m=t.delimiter),"boolean"!=typeof t.quotes&&"function"!=typeof t.quotes&&!Array.isArray(t.quotes)||(s=t.quotes),"boolean"!=typeof t.skipEmptyLines&&"string"!=typeof t.skipEmptyLines||(i=t.skipEmptyLines),"string"==typeof t.newline&&(y=t.newline),"string"==typeof t.quoteChar&&(a=t.quoteChar,o=a+a),"boolean"==typeof t.header&&(_=t.header),Array.isArray(t.columns)){if(0===t.columns.length)throw new Error("Option columns is empty");r=t.columns}void 0!==t.escapeChar&&(o=t.escapeChar+a),t.escapeFormulae instanceof RegExp?h=t.escapeFormulae:"boolean"==typeof t.escapeFormulae&&t.escapeFormulae&&(h=/^[=+\-@\t\r].*$/)}})(),new RegExp(U(a),"g"));"string"==typeof e&&(e=JSON.parse(e));if(Array.isArray(e)){if(!e.length||Array.isArray(e[0]))return n(null,e,i);if("object"==typeof e[0])return n(r||Object.keys(e[0]),e,i)}else if("object"==typeof e)return"string"==typeof e.data&&(e.data=JSON.parse(e.data)),Array.isArray(e.data)&&(e.fields||(e.fields=e.meta&&e.meta.fields||r),e.fields||(e.fields=Array.isArray(e.data[0])?e.fields:"object"==typeof e.data[0]?Object.keys(e.data[0]):[]),Array.isArray(e.data[0])||"object"==typeof e.data[0]||(e.data=[e.data])),n(e.fields||[],e.data||[],i);throw new Error("Unable to serialize unrecognized input");function n(e,t,i){var r="",n=("string"==typeof e&&(e=JSON.parse(e)),"string"==typeof t&&(t=JSON.parse(t)),Array.isArray(e)&&0<e.length),s=!Array.isArray(t[0]);if(n&&_){for(var a=0;a<e.length;a++)0<a&&(r+=m),r+=k(e[a],a);0<t.length&&(r+=y)}for(var o=0;o<t.length;o++){var h=(n?e:t[o]).length,u=!1,d=n?0===Object.keys(t[o]).length:0===t[o].length;if(i&&!n&&(u="greedy"===i?""===t[o].join("").trim():1===t[o].length&&0===t[o][0].length),"greedy"===i&&n){for(var f=[],l=0;l<h;l++){var c=s?e[l]:l;f.push(t[o][c])}u=""===f.join("").trim()}if(!u){for(var p=0;p<h;p++){0<p&&!d&&(r+=m);var g=n&&s?e[p]:p;r+=k(t[o][g],p)}o<t.length-1&&(!i||0<h&&!d)&&(r+=y)}}return r}function k(e,t){var i,r,n;return null==e?"":e.constructor===Date?JSON.stringify(e).slice(1,25):(n=!1,h&&"string"==typeof e&&h.test(e)&&(e="'"+e,n=!0),r=(i=e.toString()).replace(u,o),(n=n||!0===s||"function"==typeof s&&s(e,t)||Array.isArray(s)&&s[t]||((e,t)=>{for(var i=0;i<t.length;i++)if(-1<e.indexOf(t[i]))return!0;return!1})(r,v.BAD_DELIMITERS)||-1<r.indexOf(m)||-1<i.indexOf(a)||" "===r.charAt(0)||" "===r.charAt(r.length-1))?a+r+a:r)}},v.RECORD_SEP=String.fromCharCode(30),v.UNIT_SEP=String.fromCharCode(31),v.BYTE_ORDER_MARK="\ufeff",v.BAD_DELIMITERS=["\r","\n",'"',v.BYTE_ORDER_MARK],v.WORKERS_SUPPORTED=!s&&!!n.Worker,v.NODE_STREAM_INPUT=1,v.LocalChunkSize=10485760,v.RemoteChunkSize=5242880,v.DefaultDelimiter=",",v.Parser=E,v.ParserHandle=i,v.NetworkStreamer=f,v.FileStreamer=l,v.StringStreamer=c,v.ReadableStreamStreamer=p,n.jQuery&&((d=n.jQuery).fn.parse=function(o){var i=o.config||{},h=[];return this.each(function(e){if(!("INPUT"===d(this).prop("tagName").toUpperCase()&&"file"===d(this).attr("type").toLowerCase()&&n.FileReader)||!this.files||0===this.files.length)return!0;for(var t=0;t<this.files.length;t++)h.push({file:this.files[t],inputElem:this,instanceConfig:d.extend({},i)})}),e(),this;function e(){if(0===h.length)q(o.complete)&&o.complete();else{var e,t,i,r,n=h[0];if(q(o.before)){var s=o.before(n.file,n.inputElem);if("object"==typeof s){if("abort"===s.action)return e="AbortError",t=n.file,i=n.inputElem,r=s.reason,void(q(o.error)&&o.error({name:e},t,i,r));if("skip"===s.action)return void u();"object"==typeof s.config&&(n.instanceConfig=d.extend(n.instanceConfig,s.config))}else if("skip"===s)return void u()}var a=n.instanceConfig.complete;n.instanceConfig.complete=function(e){q(a)&&a(e,n.file,n.inputElem),u()},v.parse(n.file,n.instanceConfig)}}function u(){h.splice(0,1),e()}}),a&&(n.onmessage=function(e){e=e.data;void 0===v.WORKER_ID&&e&&(v.WORKER_ID=e.workerId);"string"==typeof e.input?n.postMessage({workerId:v.WORKER_ID,results:v.parse(e.input,e.config),finished:!0}):(n.File&&e.input instanceof File||e.input instanceof Object)&&(e=v.parse(e.input,e.config))&&n.postMessage({workerId:v.WORKER_ID,results:e,finished:!0})}),(f.prototype=Object.create(u.prototype)).constructor=f,(l.prototype=Object.create(u.prototype)).constructor=l,(c.prototype=Object.create(c.prototype)).constructor=c,(p.prototype=Object.create(u.prototype)).constructor=p,v});
+</script>
+<style>
+  :root{
+    --bg:#0d0f14; --panel:#12151c; --panel2:#161a23; --border:#2a2e38;
+    --text:#e8e6e1; --text-dim:#9a9790; --text-faint:#6b6860;
+    --green:#4fd1a5; --red:#e0685a; --gold:#d4af6a; --blue:#6aa9d4;
+    --green-bg:rgba(79,209,165,0.10); --red-bg:rgba(224,104,90,0.10);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',sans-serif; font-size:14px; line-height:1.5;
+    padding:32px 24px 80px;
+  }
+  .wrap{ max-width:1180px; margin:0 auto; }
+  header{ margin-bottom:32px; }
+  h1{
+    font-family:'Fraunces',serif; font-weight:600; font-size:32px;
+    margin:0 0 6px; letter-spacing:-0.01em;
+  }
+  .subtitle{ color:var(--text-dim); font-size:14px; max-width:640px; }
+  .meta-row{ display:flex; gap:18px; margin-top:10px; flex-wrap:wrap; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-faint); }
+
+  .data-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:14px 18px; margin-bottom:16px; flex-wrap:wrap;
+  }
+  .data-bar-left{ display:flex; align-items:center; gap:12px; }
+  .data-status-dot{ width:9px; height:9px; border-radius:50%; background:var(--text-faint); flex-shrink:0; transition:background .2s; }
+  .data-status-dot.ok{ background:var(--green); box-shadow:0 0 6px rgba(79,209,165,0.6); }
+  .data-status-dot.err{ background:var(--red); }
+  .data-status-dot.loading{ background:var(--gold); animation:pulse 1s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  .data-status-text{ font-size:13.5px; font-weight:500; }
+  .data-status-sub{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-faint); margin-top:2px; }
+  .btn.small{ padding:6px 13px; font-size:12px; }
+  .link-btn{ background:none; border:none; color:var(--text-faint); text-decoration:underline; cursor:pointer; font-size:12px; font-family:'Inter',sans-serif; padding:0; }
+  .link-btn:hover{ color:var(--text); }
+
+  .upload-zone{
+    border:1px dashed var(--border); border-radius:10px; padding:22px;
+    background:var(--panel); margin-bottom:28px; display:flex; align-items:center;
+    justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .upload-zone.dragover{ border-color:var(--gold); background:rgba(212,175,106,0.06); }
+  .upload-left{ display:flex; align-items:center; gap:14px; }
+  .upload-icon{ width:36px; height:36px; border-radius:8px; background:var(--panel2); display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:18px; flex-shrink:0; }
+  .upload-copy strong{ display:block; font-size:14px; margin-bottom:2px; }
+  .upload-copy span{ color:var(--text-faint); font-size:12.5px; }
+  .btn{
+    background:var(--gold); color:#12151c; border:none; padding:9px 18px;
+    border-radius:7px; font-family:'Inter',sans-serif; font-weight:600; font-size:13px;
+    cursor:pointer; transition:opacity .15s;
+  }
+  .btn:hover{ opacity:0.85; }
+  .btn.secondary{ background:transparent; color:var(--text-dim); border:1px solid var(--border); }
+  input[type=file]{ display:none; }
+
+  #dash{ display:none; }
+  #dash.show{ display:block; }
+  #empty-note{ color:var(--text-faint); font-size:13px; padding:40px 0; text-align:center; border:1px solid var(--border); border-radius:10px; }
+
+  .filter-bar{
+    margin-bottom:24px; padding:18px 22px;
+  }
+  .filter-top{ display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:4px; }
+  .filter-label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); }
+  .filter-range-display{ font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--gold); font-weight:600; }
+  .filter-range-sub{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--text-faint); }
+  .slider-wrap{ position:relative; height:34px; margin:8px 0 4px; }
+  .slider-track-bg{ position:absolute; left:0; right:0; top:15px; height:4px; background:var(--border); border-radius:2px; }
+  .slider-track-fill{ position:absolute; top:15px; height:4px; background:var(--gold); border-radius:2px; opacity:0.7; }
+  .range-slider{
+    position:absolute; left:0; right:0; top:0; width:100%; height:34px; margin:0;
+    -webkit-appearance:none; appearance:none; background:transparent; pointer-events:none;
+  }
+  .range-slider::-webkit-slider-runnable-track{ -webkit-appearance:none; height:4px; background:transparent; }
+  .range-slider::-moz-range-track{ height:4px; background:transparent; }
+  .range-slider::-webkit-slider-thumb{
+    -webkit-appearance:none; pointer-events:auto; width:16px; height:16px; border-radius:50%;
+    background:var(--gold); cursor:pointer; margin-top:8px; border:2px solid #0b0d12; box-shadow:0 0 0 1px rgba(212,175,106,0.3);
+  }
+  .range-slider::-moz-range-thumb{
+    pointer-events:auto; width:16px; height:16px; border-radius:50%;
+    background:var(--gold); cursor:pointer; border:2px solid #0b0d12; box-shadow:0 0 0 1px rgba(212,175,106,0.3);
+  }
+  .filter-presets{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; align-items:center; }
+  .preset-btn{
+    background:var(--panel2); color:var(--text-dim); border:1px solid var(--border); padding:6px 13px;
+    border-radius:6px; font-family:'Inter',sans-serif; font-size:12px; cursor:pointer; transition:all .15s;
+  }
+  .preset-btn:hover{ border-color:var(--gold); color:var(--text); }
+  .preset-btn.active{ background:rgba(212,175,106,0.12); border-color:var(--gold); color:var(--gold); }
+  .filter-select{
+    background:var(--panel2); color:var(--text); border:1px solid var(--border); padding:6px 10px;
+    border-radius:6px; font-family:'Inter',sans-serif; font-size:12px; cursor:pointer;
+  }
+
+  .kpi-grid{
+    display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:36px;
+  }
+  @media(max-width:900px){ .kpi-grid{ grid-template-columns:repeat(3,1fr);} }
+  @media(max-width:520px){ .kpi-grid{ grid-template-columns:repeat(2,1fr);} }
+  .kpi{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px;
+  }
+  .kpi .label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:6px; }
+  .kpi .value{ font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; }
+  .kpi .value.pos{ color:var(--green); }
+  .kpi .value.neg{ color:var(--red); }
+
+  section.block{ margin-bottom:44px; }
+  .block-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px; flex-wrap:wrap; gap:8px;}
+  .block-head h2{
+    font-family:'Fraunces',serif; font-weight:600; font-size:20px; margin:0;
+  }
+  .block-head .num{ font-family:'IBM Plex Mono',monospace; color:var(--text-faint); font-size:12px; }
+  .block-desc{ color:var(--text-dim); font-size:13px; margin:6px 0 18px; max-width:760px; }
+
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:22px;
+  }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:800px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .callout{
+    border-radius:10px; padding:14px 16px; font-size:13px; line-height:1.55;
+    border:1px solid var(--border); margin-top:14px;
+  }
+  .callout.gold{ background:rgba(212,175,106,0.07); border-color:rgba(212,175,106,0.35); }
+  .callout b{ color:var(--text); }
+  .callout .stat{ font-family:'IBM Plex Mono',monospace; }
+
+  /* bar chart */
+  .barchart{ display:flex; align-items:flex-end; gap:14px; height:200px; padding-top:10px; }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; position:relative; }
+  .bar-track{ width:100%; height:100%; display:flex; flex-direction:column; justify-content:flex-end; position:relative; }
+  .bar{ width:60%; margin:0 auto; border-radius:4px 4px 0 0; min-height:2px; position:relative; transition:opacity .15s;}
+  .bar:hover{ opacity:0.8; }
+  .bar-val{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-dim); margin-bottom:4px; text-align:center; white-space:nowrap;}
+  .bar-sub{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text-faint); text-align:center; }
+  .bar-label{ font-size:11.5px; color:var(--text-dim); margin-top:8px; text-align:center; }
+  .zero-line{ position:absolute; left:0; right:0; border-top:1px solid var(--border); }
+
+  table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  th{ text-align:left; color:var(--text-faint); font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:.04em; padding:6px 10px; border-bottom:1px solid var(--border); }
+  td{ padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.04); font-family:'IBM Plex Mono',monospace; }
+  tr:hover td{ background:rgba(255,255,255,0.02); }
+  .pos{ color:var(--green); } .neg{ color:var(--red); }
+
+  .heatmap{ width:100%; border-collapse:collapse; }
+  .heatmap th{ text-align:center; padding:8px 6px; font-size:11px; }
+  .heatmap th.row-head{ text-align:left; }
+  .heatmap td{ text-align:center; padding:0; border:none; }
+  .heatmap .cell{
+    margin:3px; border-radius:7px; padding:10px 6px; font-family:'IBM Plex Mono',monospace;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:56px;
+  }
+  .heatmap .cell .cval{ font-size:13px; font-weight:600; }
+  .heatmap .cell .cwr{ font-size:10px; opacity:0.75; }
+  .heatmap .cell.empty{ background:transparent !important; color:var(--text-faint); font-size:11px; }
+  .heatmap .row-label{ font-size:12.5px; color:var(--text-dim); padding-right:10px; white-space:nowrap; }
+
+  #equity-svg{ width:100%; height:220px; display:block; }
+  .legend{ display:flex; gap:16px; font-size:11.5px; color:var(--text-faint); margin-top:8px; }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+  footer{ margin-top:50px; padding-top:20px; border-top:1px solid var(--border); color:var(--text-faint); font-size:11.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Day-Trading Behavioral Dashboard</h1>
+    <div class="subtitle">Reconstructs entry→flat trade episodes from your broker activity export and surfaces time-of-day, sizing, and discipline patterns. Uses real entry timestamps (converted to ET) when your export includes them; falls back to an order-within-day proxy otherwise.</div>
+    <div class="meta-row" id="meta-row" style="display:none;"></div>
+  </header>
+
+  <div class="data-bar" id="data-bar">
+    <div class="data-bar-left">
+      <div class="data-status-dot" id="data-status-dot"></div>
+      <div>
+        <div class="data-status-text" id="data-status-text">Loading data…</div>
+        <div class="data-status-sub" id="data-status-sub"></div>
+      </div>
+    </div>
+    <button class="btn" id="refresh-btn">↻ Refresh Data</button>
+  </div>
+  <div style="text-align:right; margin:-10px 0 16px;">
+    <button class="link-btn" id="toggle-upload-btn">Upload a file manually instead</button>
+  </div>
+
+  <div class="upload-zone" id="drop-zone" style="display:none;">
+    <div class="upload-left">
+      <div class="upload-icon">↑</div>
+      <div class="upload-copy">
+        <strong id="upload-title">Upload activity export (.csv)</strong>
+        <span id="upload-sub">Same format as your broker's activities export — TBIL, dividends, and interest rows are filtered out automatically.</span>
+      </div>
+    </div>
+    <div>
+      <button class="btn" id="upload-btn">Choose File</button>
+      <input type="file" id="file-input" accept=".csv">
+    </div>
+  </div>
+  <div id="empty-note" style="display:none;">Loading…</div>
+
+  <div id="dash">
+    <div class="filter-bar panel">
+      <div class="filter-top">
+        <div>
+          <div class="filter-label">Date range in scope</div>
+          <div class="filter-range-display" id="filter-range-display">—</div>
+        </div>
+        <div class="filter-range-sub" id="filter-range-sub"></div>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-track-bg"></div>
+        <div class="slider-track-fill" id="slider-track-fill"></div>
+        <input type="range" id="slider-start" class="range-slider" min="0" max="0" step="1" value="0">
+        <input type="range" id="slider-end" class="range-slider" min="0" max="0" step="1" value="0">
+      </div>
+      <div class="filter-presets" id="filter-presets">
+        <button class="preset-btn" data-preset="recent">Mar 2026 → present</button>
+        <button class="preset-btn" data-preset="all">Full range</button>
+        <button class="preset-btn" data-preset="7">Last 7 trading days</button>
+        <button class="preset-btn" data-preset="14">Last 14 trading days</button>
+        <button class="preset-btn" data-preset="30">Last 30 trading days</button>
+        <select class="filter-select" id="month-select"><option value="">Jump to month…</option></select>
+      </div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <section class="block">
+      <div class="block-head"><h2>1 · Time of Day</h2><span class="num" id="tod-num"></span></div>
+      <div class="block-desc">Trades bucketed into quintiles by their position in that day's transaction sequence (Q1 = earliest ~20% of the day's trades, Q5 = latest). This is your single largest performance driver.</div>
+      <div class="panel">
+        <div id="quintile-chart" class="barchart"></div>
+        <div class="callout gold" id="quintile-callout"></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>2 · Q1 as a Leading Indicator</h2></div>
+      <div class="block-desc">Does a strong opening stretch actually predict a good day — or is it just noise? Split by whether your Q1 (first ~20% of trades) finished positive or negative that day.</div>
+      <div class="panel">
+        <div class="grid-2">
+          <div>
+            <table>
+              <thead><tr><th>Q1 outcome</th><th>Days</th><th>Avg Q1 P&L</th><th>Avg rest-of-day P&L</th></tr></thead>
+              <tbody id="q1-table"></tbody>
+            </table>
+          </div>
+          <div class="callout gold" id="q1-callout"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>3 · Position Sizing &amp; Trade Management</h2><span class="num" id="size-num"></span></div>
+      <div class="block-desc">Initial entry size (first fill only, not scaled-in totals) vs. outcome, and whether trades you actively managed (multiple fills) outperformed single lump in/out trades.</div>
+      <div class="panel">
+        <div class="grid-2">
+          <div>
+            <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;">Avg P&amp;L by initial contract count</div>
+            <div id="size-chart" class="barchart" style="height:170px;"></div>
+          </div>
+          <div>
+            <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;">Single-shot entry vs. scaled (multi-fill) entry</div>
+            <div id="scaled-chart" class="barchart" style="height:170px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>4 · Emotional Discipline</h2><span class="num" id="revenge-num"></span></div>
+      <div class="block-desc">Same-day sequencing effects: what happens right after a loss, how many consecutive losses you can absorb before performance breaks, and whether busier days pay off.</div>
+      <div class="panel">
+        <div class="grid-2">
+          <div>
+            <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;">Next trade, same ticker: after a win vs. after a loss</div>
+            <div id="revenge-chart" class="barchart" style="height:170px;"></div>
+          </div>
+          <div>
+            <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;">Performance vs. current same-day losing streak</div>
+            <div id="streak-chart" class="barchart" style="height:170px;"></div>
+          </div>
+        </div>
+        <div class="callout gold" id="revenge-callout"></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>5 · Instrument Selection</h2></div>
+      <div class="block-desc">Days-to-expiry at entry, and calls vs. puts.</div>
+      <div class="panel">
+        <div class="grid-2">
+          <div>
+            <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;">Total P&amp;L by DTE at entry</div>
+            <div id="dte-chart" class="barchart" style="height:170px;"></div>
+          </div>
+          <div>
+            <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;">Calls vs. puts</div>
+            <div id="cp-chart" class="barchart" style="height:170px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>6 · Time of Day × DTE</h2><span class="num" id="tod-dte-num"></span></div>
+      <div class="block-desc" id="tod-dte-desc">Avg P&amp;L per trade for every time-window/DTE combination. Darker green = stronger positive edge, darker red = bigger drag.</div>
+      <div class="panel">
+        <div id="tod-dte-heatmap"></div>
+        <div class="callout gold" id="tod-dte-callout"></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>7 · Day of Week</h2><span class="num" id="dow-num"></span></div>
+      <div class="block-desc" id="dow-desc">Day of week has been one of the most reliable splits in this data — worth slicing on its own and cross-referenced against time of day.</div>
+      <div class="panel">
+        <div id="dow-chart" class="barchart"></div>
+      </div>
+      <div class="panel" style="margin-top:14px;">
+        <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;" id="dow-tod-label">Day of Week × Time of Day (avg P&amp;L/trade)</div>
+        <div id="dow-tod-heatmap"></div>
+        <div class="callout gold" id="dow-tod-callout"></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>8 · Overtrading</h2></div>
+      <div class="block-desc">Average per-day P&amp;L, bucketed by how many trades you took that day.</div>
+      <div class="panel">
+        <div id="overtrading-chart" class="barchart" style="height:170px;"></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>9 · Equity Curve</h2></div>
+      <div class="panel">
+        <svg id="equity-svg" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg>
+        <div class="legend"><span><span class="dot" style="background:var(--gold);"></span>Cumulative realized P&amp;L (same-day trades)</span></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>10 · Instrument Breakdown</h2></div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Underlying</th><th>Trades</th><th>Win Rate</th><th>Total P&amp;L</th></tr></thead>
+          <tbody id="underlying-table"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      Same-day (open→flat) episodes only. Multi-day holds are excluded from this view — <span id="multiday-note"></span>.
+      Time of day uses real entry timestamps (converted to US Eastern) when available in your export; otherwise falls back to an order-within-day proxy.
+    </footer>
+  </div>
+</div>
+
+<script>
+// ============ TIME HELPERS ============
+const ET_FMT = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/New_York', year:'numeric', month:'2-digit', day:'2-digit',
+  hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, weekday:'long'
+});
+function getET(dateObj) {
+  const parts = ET_FMT.formatToParts(dateObj);
+  const m = {}; parts.forEach(p => m[p.type] = p.value);
+  const hour = m.hour === '24' ? 0 : parseInt(m.hour,10); // Intl can return '24' for midnight
+  return {
+    dateStr: `${m.year}-${m.month}-${m.day}`,
+    timeStr: `${m.hour}:${m.minute}:${m.second}`,
+    minutesOfDay: hour*60 + parseInt(m.minute,10),
+    dow: m.weekday,
+  };
+}
+function todCategory(minutesOfDay) {
+  if (minutesOfDay < 9*60+30) return 'Open (9:30-10:00)';       // fold pre-market in
+  if (minutesOfDay < 10*60)   return 'Open (9:30-10:00)';
+  if (minutesOfDay < 11*60+30) return 'Early (10:00-11:30)';
+  if (minutesOfDay < 14*60)   return 'Lunch (11:30-14:00)';
+  return 'Close (14:00-16:00)';                                  // fold after-hours in
+}
+const TOD_ORDER = ['Open (9:30-10:00)','Early (10:00-11:30)','Lunch (11:30-14:00)','Close (14:00-16:00)'];
+const TOD_SHORT = {'Open (9:30-10:00)':'Open','Early (10:00-11:30)':'Early','Lunch (11:30-14:00)':'Lunch','Close (14:00-16:00)':'Close'};
+const TOD_SHORT_ORDER = ['Open','Early','Lunch','Close'];
+
+// ============ CORE EPISODE RECONSTRUCTION ============
+function processTrades(rows) {
+  const hasTimestamps = rows.length > 0 && 'effective_at' in rows[0];
+
+  let df = hasTimestamps
+    ? rows.filter(r => r.effective_at && /^\d{4}-\d{2}-\d{2}T/.test(r.effective_at))
+    : rows.filter(r => r.transaction_date && /^\d{4}-\d{2}-\d{2}$/.test(r.transaction_date));
+  df = df.filter(r => (r.activity_type === 'Trade' || r.activity_type === 'OptionExpiry'));
+  df = df.filter(r => r.symbol !== 'TBIL');
+
+  df.forEach((r, i) => {
+    r.orig_order = i;
+    r.unit_price = parseFloat(r.unit_price) || 0;
+    r.net_cash_amount = parseFloat(r.net_cash_amount) || 0;
+    r.quantity = parseFloat(r.quantity) || 0;
+    r.qty_signed = r.quantity;
+  });
+
+  if (hasTimestamps) {
+    df.forEach(r => {
+      const d = new Date(r.effective_at);
+      const et = getET(d);
+      r.date_str = et.dateStr;
+      r.time_str = et.timeStr;
+      r.minutes_of_day = et.minutesOfDay;
+      r.dow = et.dow;
+      r.ts_ms = d.getTime();
+    });
+    df.sort((a,b) => a.ts_ms - b.ts_ms);
+    df.forEach((r,i) => r.orig_order = i);
+  } else {
+    const DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    function dowOf(dateStr) {
+      const [y,m,d] = dateStr.split('-').map(Number);
+      return DOW[new Date(Date.UTC(y, m-1, d)).getUTCDay()];
+    }
+    df.forEach(r => { r.dow = dowOf(r.transaction_date); r.date_str = r.transaction_date; });
+    df.sort((a,b) => a.orig_order - b.orig_order);
+    const dayCounts = {};
+    df.forEach(r => { dayCounts[r.date_str] = (dayCounts[r.date_str]||0)+1; });
+    const dayRunning = {};
+    df.forEach(r => {
+      dayRunning[r.date_str] = (dayRunning[r.date_str]||0)+1;
+      r.day_txn_rank = dayRunning[r.date_str];
+      r.day_txn_count = dayCounts[r.date_str];
+      r.day_txn_pct = r.day_txn_rank / r.day_txn_count;
+    });
+  }
+
+  const bySymbol = {};
+  df.forEach(r => {
+    if (!bySymbol[r.symbol]) bySymbol[r.symbol] = [];
+    bySymbol[r.symbol].push(r);
+  });
+
+  const OPT_RE = /^(\S+)\s+(\d{6})([CP])(\d{8})$/;
+  const episodes = [];
+  Object.keys(bySymbol).forEach(symbol => {
+    const g = bySymbol[symbol].sort((a,b) => a.orig_order - b.orig_order);
+    let pos = 0, cur = null;
+    for (const row of g) {
+      const q = row.qty_signed;
+      if (cur === null) {
+        cur = {
+          symbol, underlying: row['underlying symbol'] || symbol,
+          start_date: row.date_str, dow: row.dow,
+          start_order: row.orig_order,
+          start_time: hasTimestamps ? row.time_str : null,
+          start_minutes: hasTimestamps ? row.minutes_of_day : null,
+          start_rank: hasTimestamps ? null : row.day_txn_rank,
+          start_pct: hasTimestamps ? null : row.day_txn_pct,
+          initial_qty: Math.abs(q), initial_notional: Math.abs(q)*row.unit_price,
+          entry_notional: 0, entry_qty: 0,
+          net_cash: 0, max_abs_pos: 0,
+          n_entry_txns: 0, n_exit_txns: 0, n_total_txns: 0,
+        };
+      }
+      cur.net_cash += row.net_cash_amount;
+      cur.n_total_txns += 1;
+      const prevPos = pos;
+      pos += q;
+      cur.max_abs_pos = Math.max(cur.max_abs_pos, Math.abs(pos), Math.abs(prevPos));
+      if (Math.abs(pos) > Math.abs(prevPos)) {
+        cur.entry_notional += Math.abs(q) * row.unit_price;
+        cur.entry_qty += Math.abs(q);
+        cur.n_entry_txns += 1;
+      } else {
+        cur.n_exit_txns += 1;
+      }
+      cur.end_date = row.date_str;
+      cur.end_order = row.orig_order;
+      if (Math.abs(pos) < 1e-9) { episodes.push(cur); cur = null; }
+    }
+    if (cur !== null) { cur.still_open = true; cur.end_date = cur.end_date || cur.start_date; episodes.push(cur); }
+  });
+
+  episodes.forEach(e => {
+    e.still_open = !!e.still_open;
+    e.pnl = e.net_cash;
+    e.win = e.pnl > 0;
+    e.same_day = e.start_date === e.end_date;
+    e.scaled_entry = e.n_entry_txns > 1;
+    e.scaled_exit = e.n_exit_txns > 1;
+    e.hasTimestamps = hasTimestamps;
+    if (hasTimestamps) e.tod = todCategory(e.start_minutes);
+    const m = e.symbol.match(OPT_RE);
+    if (m) {
+      e.is_option = true; e.cp = m[3];
+      const yy = parseInt(m[2].slice(0,2),10), mm = parseInt(m[2].slice(2,4),10), dd = parseInt(m[2].slice(4,6),10);
+      const expUTC = Date.UTC(2000+yy, mm-1, dd);
+      const [sy,sm,sd] = e.start_date.split('-').map(Number);
+      e.dte = Math.round((expUTC - Date.UTC(sy,sm-1,sd)) / 86400000);
+    } else { e.is_option = false; e.cp = null; e.dte = null; }
+  });
+  episodes.hasTimestamps = hasTimestamps;
+  return episodes;
+}
+
+// ============ HELPERS ============
+const fmt$ = v => (v<0?'-$':'$') + Math.abs(v).toLocaleString(undefined,{maximumFractionDigits:0});
+const fmtPct = v => (v*100).toFixed(0)+'%';
+
+function quantileBuckets(arr, keyFn, nBuckets, labelFn) {
+  const sorted = [...arr].sort((a,b)=>keyFn(a)-keyFn(b));
+  const n = sorted.length;
+  const buckets = Array.from({length:nBuckets}, ()=>[]);
+  sorted.forEach((item,i)=>{
+    const bi = Math.min(nBuckets-1, Math.floor(i*nBuckets/n));
+    buckets[bi].push(item);
+  });
+  return buckets.map((items,i)=>({
+    label: labelFn ? labelFn(items, i) : ('B'+(i+1)),
+    items,
+    n: items.length,
+    winRate: items.length? items.filter(x=>x.win).length/items.length : 0,
+    totalPnl: items.reduce((s,x)=>s+x.pnl,0),
+    avgPnl: items.length? items.reduce((s,x)=>s+x.pnl,0)/items.length : 0,
+  }));
+}
+
+function renderBarChart(containerId, groups, opts) {
+  opts = opts || {};
+  const valueKey = opts.valueKey || 'totalPnl';
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  const maxAbs = Math.max(1, ...groups.map(g => Math.abs(g[valueKey])));
+  groups.forEach(g => {
+    const val = g[valueKey];
+    const heightPct = Math.max(2, Math.abs(val) / maxAbs * 88);
+    const col = document.createElement('div'); col.className = 'bar-col';
+    const track = document.createElement('div'); track.className = 'bar-track';
+    const valEl = document.createElement('div'); valEl.className = 'bar-val';
+    valEl.textContent = (opts.valueFmt ? opts.valueFmt(val) : fmt$(val));
+    const bar = document.createElement('div'); bar.className = 'bar';
+    bar.style.height = heightPct + '%';
+    bar.style.background = val >= 0 ? 'var(--green)' : 'var(--red)';
+    const sub = document.createElement('div'); sub.className='bar-sub';
+    sub.textContent = (g.winRate!==undefined ? fmtPct(g.winRate)+' win · n='+g.n : 'n='+g.n);
+    const label = document.createElement('div'); label.className='bar-label'; label.textContent = g.label;
+    track.appendChild(bar);
+    col.appendChild(valEl); col.appendChild(track); col.appendChild(sub); col.appendChild(label);
+    container.appendChild(col);
+  });
+}
+
+function cellColorFor(avgPnl, maxAbs){
+  if (maxAbs===0) return 'rgba(255,255,255,0.03)';
+  const alpha = Math.min(0.85, 0.12 + 0.73*(Math.abs(avgPnl)/maxAbs));
+  return avgPnl>=0 ? 'rgba(79,209,165,'+alpha.toFixed(2)+')' : 'rgba(224,104,90,'+alpha.toFixed(2)+')';
+}
+function renderHeatmap(containerId, rowLabels, colLabels, itemsFn) {
+  const cells = rowLabels.map(r => colLabels.map(c => itemsFn(r,c)));
+  let maxAbs = 1;
+  cells.forEach(row => row.forEach(items => {
+    if (items && items.length) {
+      const avg = items.reduce((s,e)=>s+e.pnl,0)/items.length;
+      maxAbs = Math.max(maxAbs, Math.abs(avg));
+    }
+  }));
+  let html = '<table class="heatmap"><thead><tr><th class="row-head"></th>'+colLabels.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>';
+  rowLabels.forEach((r,ri)=>{
+    html += '<tr><td class="row-label">'+r+'</td>';
+    colLabels.forEach((c,ci)=>{
+      const items = cells[ri][ci];
+      if (items && items.length) {
+        const avg = items.reduce((s,e)=>s+e.pnl,0)/items.length;
+        const wr = items.filter(e=>e.win).length/items.length;
+        html += '<td><div class="cell" style="background:'+cellColorFor(avg,maxAbs)+'"><div class="cval">'+fmt$(avg)+'</div><div class="cwr">'+fmtPct(wr)+' · n='+items.length+'</div></div></td>';
+      } else {
+        html += '<td><div class="cell empty">—</div></td>';
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById(containerId).innerHTML = html;
+  return cells;
+}
+
+// ============ MAIN RENDER ============
+function renderDashboard(episodes) {
+  const same = episodes.filter(e => e.same_day);
+  const multiDayCount = episodes.length - same.length;
+
+  // ---- KPIs ----
+  const totalPnl = same.reduce((s,e)=>s+e.pnl,0);
+  const wins = same.filter(e=>e.win).length;
+  const winRate = wins/same.length;
+  const days = [...new Set(same.map(e=>e.start_date))].sort();
+  const dailyPnl = {};
+  same.forEach(e=>{ dailyPnl[e.start_date] = (dailyPnl[e.start_date]||0) + e.pnl; });
+  const dayVals = Object.values(dailyPnl);
+  const positiveDays = dayVals.filter(v=>v>0).length;
+  const bestDay = Math.max(...dayVals), worstDay = Math.min(...dayVals);
+  const avgTradesPerDay = same.length/days.length;
+
+  const kpis = [
+    {label:'Total P&L', value:fmt$(totalPnl), cls: totalPnl>=0?'pos':'neg'},
+    {label:'Win Rate', value:fmtPct(winRate), cls:''},
+    {label:'Trading Days', value:days.length, cls:''},
+    {label:'Positive Days', value:positiveDays+' / '+days.length, cls:''},
+    {label:'Best Day', value:fmt$(bestDay), cls:'pos'},
+    {label:'Worst Day', value:fmt$(worstDay), cls:'neg'},
+  ];
+  document.getElementById('kpi-grid').innerHTML = kpis.map(k=>
+    '<div class="kpi"><div class="label">'+k.label+'</div><div class="value '+k.cls+'">'+k.value+'</div></div>'
+  ).join('');
+
+  document.getElementById('meta-row').style.display='flex';
+  const hasTs = same.length>0 && same[0].hasTimestamps;
+  document.getElementById('meta-row').innerHTML =
+    '<span>'+(days[0]||'—')+' → '+(days[days.length-1]||'—')+'</span><span>'+same.length+' day-trade episodes in view</span><span>'+avgTradesPerDay.toFixed(1)+' trades/day avg</span>'+
+    '<span style="color:'+(hasTs?'var(--green)':'var(--gold)')+';">'+(hasTs?'✓ real timestamps (ET)':'⚠ order-based proxy (no timestamps)')+'</span>';
+  document.getElementById('multiday-note').textContent = multiDayCount+' multi-day episode'+(multiDayCount===1?'':'s')+' excluded';
+
+  // ---- 1. Time of day (real entry timestamps, ET) ----
+  document.getElementById('quintile-callout').closest('section').querySelector('.block-desc').textContent = hasTs
+    ? "Trades bucketed by actual entry timestamp, converted to US Eastern Time. Open = 9:30-10:00, Early = 10:00-11:30, Lunch = 11:30-14:00, Close = 14:00-16:00."
+    : "This file has no timestamps, so this falls back to an order-within-day proxy (Q1 = earliest ~20% of that day's trades ... Q5 = latest).";
+  let todGroups;
+  if (hasTs) {
+    todGroups = TOD_ORDER.map(cat=>{
+      const items = same.filter(e=>e.tod===cat);
+      return {label:cat.replace(' (','\n('), n:items.length,
+        winRate: items.length?items.filter(e=>e.win).length/items.length:0,
+        totalPnl: items.reduce((s,e)=>s+e.pnl,0),
+        avgPnl: items.length?items.reduce((s,e)=>s+e.pnl,0)/items.length:0,
+        items};
+    });
+  } else {
+    todGroups = quantileBuckets(same, e=>e.start_pct, 5, (items,i)=>['Q1\n(earliest)','Q2','Q3','Q4','Q5\n(latest)'][i]);
+    todGroups.forEach((g,qi)=> g.items.forEach(e=> e.quintileLabel = ['Q1','Q2','Q3','Q4','Q5'][qi]));
+  }
+  renderBarChart('quintile-chart', todGroups, {valueKey:'totalPnl'});
+  const best = todGroups.reduce((a,b)=>a.avgPnl>b.avgPnl?a:b);
+  const worst = todGroups.reduce((a,b)=>a.avgPnl<b.avgPnl?a:b);
+  document.getElementById('tod-num').textContent = best.label.replace('\n',' ')+' avg '+fmt$(best.avgPnl)+'/trade → '+worst.label.replace('\n',' ')+' avg '+fmt$(worst.avgPnl)+'/trade';
+  document.getElementById('quintile-callout').innerHTML = hasTs
+    ? '<b>Best window:</b> '+best.label.replace('\n',' ')+' ('+fmt$(best.avgPnl)+'/trade, '+fmtPct(best.winRate)+' win, n='+best.n+'). '+
+      '<b>Worst window:</b> '+worst.label.replace('\n',' ')+' ('+fmt$(worst.avgPnl)+'/trade, '+fmtPct(worst.winRate)+' win, n='+worst.n+').'
+    : '<b>Reading this:</b> Q1 avg '+fmt$(todGroups[0].avgPnl)+'/trade vs Q5 avg '+fmt$(todGroups[4].avgPnl)+'/trade.';
+
+  // ---- 2. First-trade-of-day leading indicator ----
+  document.querySelector('#q1-table').closest('.panel').closest('section').querySelector('h2').textContent =
+    hasTs ? '2 · First Trade of the Day, as a Leading Indicator' : '2 · Q1 as a Leading Indicator';
+  document.querySelector('#q1-table').closest('.panel').closest('section').querySelector('.block-desc').textContent =
+    hasTs ? "Does the outcome of your literal first trade each day (by timestamp) predict the rest of the session?"
+          : "Does a strong opening stretch (Q1) actually predict a good day?";
+  const byDayAll = {};
+  same.forEach(e=>{ (byDayAll[e.start_date]=byDayAll[e.start_date]||[]).push(e); });
+  let firstTradeItems = [];
+  if (hasTs) {
+    Object.values(byDayAll).forEach(list=>{
+      list.sort((a,b)=>a.start_order-b.start_order);
+      firstTradeItems.push(list[0]);
+    });
+  } else {
+    firstTradeItems = todGroups[0].items;
+  }
+  const firstSet = new Set(firstTradeItems);
+  const firstByDay = {};
+  firstTradeItems.forEach(e=>{ firstByDay[e.start_date] = (firstByDay[e.start_date]||0)+e.pnl; });
+  const restByDay = {};
+  same.forEach(e=>{ if (!firstSet.has(e)) restByDay[e.start_date] = (restByDay[e.start_date]||0)+e.pnl; });
+  let posQ1Days=[], negQ1Days=[];
+  Object.keys(firstByDay).forEach(d=>{
+    const rest = restByDay[d]||0;
+    if (firstByDay[d] > 0) posQ1Days.push(rest); else negQ1Days.push(rest);
+  });
+  const avgRestPos = posQ1Days.length? posQ1Days.reduce((a,b)=>a+b,0)/posQ1Days.length : 0;
+  const avgRestNeg = negQ1Days.length? negQ1Days.reduce((a,b)=>a+b,0)/negQ1Days.length : 0;
+  const rowLabel = hasTs ? 'First trade' : 'Q1';
+  document.getElementById('q1-table').innerHTML =
+    '<tr><td>'+rowLabel+' finished positive</td><td>'+posQ1Days.length+'</td><td class="pos">avg &gt; 0</td><td class="'+(avgRestPos>=0?'pos':'neg')+'">'+fmt$(avgRestPos)+'</td></tr>'+
+    '<tr><td>'+rowLabel+' finished negative/flat</td><td>'+negQ1Days.length+'</td><td class="neg">avg ≤ 0</td><td class="'+(avgRestNeg>=0?'pos':'neg')+'">'+fmt$(avgRestNeg)+'</td></tr>';
+  document.getElementById('q1-callout').innerHTML =
+    '<b>Leading indicator:</b> on days your '+(hasTs?'literal first trade':'early trades (Q1)')+' finish'+(hasTs?'s':'')+' positive, the rest of the day averages <span class="stat pos">'+fmt$(avgRestPos)+'</span>. '+
+    'On days it finishes negative or flat, the rest of the day averages <span class="stat neg">'+fmt$(avgRestNeg)+'</span>.';
+
+  // ---- 3. Sizing ----
+  const sizeGroups = quantileBuckets(same, e=>e.initial_qty, 5, (items,i)=>{
+    const vals = items.map(x=>x.initial_qty);
+    return Math.round(Math.min(...vals))+'-'+Math.round(Math.max(...vals))+' ctr';
+  });
+  renderBarChart('size-chart', sizeGroups, {valueKey:'avgPnl'});
+  document.getElementById('size-num').textContent = 'smallest-size win rate '+fmtPct(sizeGroups[0].winRate)+' vs largest-size '+fmtPct(sizeGroups[4].winRate);
+
+  const scaledYes = same.filter(e=>e.scaled_entry);
+  const scaledNo = same.filter(e=>!e.scaled_entry);
+  const scaledGroups = [
+    {label:'Single-shot entry', n:scaledNo.length, winRate: scaledNo.length?scaledNo.filter(e=>e.win).length/scaledNo.length:0, avgPnl: scaledNo.length?scaledNo.reduce((s,e)=>s+e.pnl,0)/scaledNo.length:0},
+    {label:'Scaled entry', n:scaledYes.length, winRate: scaledYes.length?scaledYes.filter(e=>e.win).length/scaledYes.length:0, avgPnl: scaledYes.length?scaledYes.reduce((s,e)=>s+e.pnl,0)/scaledYes.length:0},
+  ];
+  renderBarChart('scaled-chart', scaledGroups, {valueKey:'avgPnl'});
+
+  // ---- 4. Revenge trading + streaks ----
+  const byDayTicker = {};
+  same.forEach(e=>{ const k=e.start_date+'|'+e.underlying; (byDayTicker[k]=byDayTicker[k]||[]).push(e); });
+  let afterWinSame=[], afterLossSame=[];
+  Object.values(byDayTicker).forEach(list=>{
+    list.sort((a,b)=>a.start_order-b.start_order);
+    for(let i=1;i<list.length;i++){
+      if(list[i-1].win) afterWinSame.push(list[i]); else afterLossSame.push(list[i]);
+    }
+  });
+  const revengeGroups = [
+    {label:'After a WIN\n(same ticker)', n:afterWinSame.length, winRate: afterWinSame.length?afterWinSame.filter(e=>e.win).length/afterWinSame.length:0, avgPnl: afterWinSame.length?afterWinSame.reduce((s,e)=>s+e.pnl,0)/afterWinSame.length:0},
+    {label:'After a LOSS\n(same ticker)', n:afterLossSame.length, winRate: afterLossSame.length?afterLossSame.filter(e=>e.win).length/afterLossSame.length:0, avgPnl: afterLossSame.length?afterLossSame.reduce((s,e)=>s+e.pnl,0)/afterLossSame.length:0},
+  ];
+  renderBarChart('revenge-chart', revengeGroups, {valueKey:'avgPnl'});
+
+  // streaks
+  const byDay = {};
+  same.forEach(e=>{ (byDay[e.start_date]=byDay[e.start_date]||[]).push(e); });
+  const streakBuckets = {};
+  Object.values(byDay).forEach(list=>{
+    list.sort((a,b)=>a.start_order-b.start_order);
+    let streak=0;
+    list.forEach(e=>{
+      const key = Math.min(streak,4);
+      (streakBuckets[key]=streakBuckets[key]||[]).push(e);
+      streak = e.win ? 0 : streak+1;
+    });
+  });
+  const streakGroups = [0,1,2,3,4].map(k=>{
+    const items = streakBuckets[k]||[];
+    return {label: k<4? (k+' prior losses'):'4+ prior losses', n:items.length,
+      winRate: items.length?items.filter(e=>e.win).length/items.length:0,
+      avgPnl: items.length?items.reduce((s,e)=>s+e.pnl,0)/items.length:0};
+  }).filter(g=>g.n>=5);
+  renderBarChart('streak-chart', streakGroups, {valueKey:'avgPnl'});
+  document.getElementById('revenge-num').textContent = 'revenge re-entries: '+fmt$(afterLossSame.reduce((s,e)=>s+e.pnl,0))+' total across '+afterLossSame.length+' trades';
+  document.getElementById('revenge-callout').innerHTML =
+    '<b>Pattern:</b> re-entering a ticker right after a loss on it wins '+fmtPct(revengeGroups[1].winRate)+' of the time (avg '+fmt$(revengeGroups[1].avgPnl)+'), vs. '+fmtPct(revengeGroups[0].winRate)+' after a prior win (avg '+fmt$(revengeGroups[0].avgPnl)+').';
+
+  // ---- 5. DTE + Calls/Puts ----
+  const optSame = same.filter(e=>e.is_option);
+  const dteGroups = quantileBuckets([], ()=>0, 1); // placeholder not used
+  function dteBucket(dte){ if(dte<=0) return '0DTE'; if(dte===1) return '1DTE'; if(dte<=3) return '2-3DTE'; if(dte<=7) return '4-7DTE'; return '8+DTE'; }
+  const dteMap = {};
+  optSame.forEach(e=>{ const b=dteBucket(e.dte); (dteMap[b]=dteMap[b]||[]).push(e); });
+  const dteOrder = ['0DTE','1DTE','2-3DTE','4-7DTE','8+DTE'].filter(b=>dteMap[b] && dteMap[b].length>0);
+  const dteGroupsFinal = dteOrder.map(b=>{
+    const items = dteMap[b];
+    return {label:b, n:items.length, winRate:items.filter(e=>e.win).length/items.length, totalPnl:items.reduce((s,e)=>s+e.pnl,0)};
+  });
+  renderBarChart('dte-chart', dteGroupsFinal, {valueKey:'totalPnl'});
+
+  const cMap = optSame.filter(e=>e.cp==='C'), pMap = optSame.filter(e=>e.cp==='P');
+  const cpGroups = [
+    {label:'Calls', n:cMap.length, winRate:cMap.length?cMap.filter(e=>e.win).length/cMap.length:0, totalPnl:cMap.reduce((s,e)=>s+e.pnl,0)},
+    {label:'Puts', n:pMap.length, winRate:pMap.length?pMap.filter(e=>e.win).length/pMap.length:0, totalPnl:pMap.reduce((s,e)=>s+e.pnl,0)},
+  ];
+  renderBarChart('cp-chart', cpGroups, {valueKey:'totalPnl'});
+
+  // ---- 5b. Time of Day x DTE heatmap ----
+  const rowLabelsTOD = hasTs ? TOD_SHORT_ORDER : ['Q1','Q2','Q3','Q4','Q5'];
+  function inTodRow(e, label) { return hasTs ? TOD_SHORT[e.tod]===label : e.quintileLabel===label; }
+  document.getElementById('tod-dte-desc').textContent = hasTs
+    ? 'Avg P&L per trade for every time-window / DTE combination. Darker green = stronger positive edge, darker red = bigger drag.'
+    : 'Avg P&L per trade for every quintile/DTE combination (no timestamps in this file, using order-within-day proxy).';
+  const dteHeatCells = renderHeatmap('tod-dte-heatmap', rowLabelsTOD, dteOrder, (rowLabel, colLabel) =>
+    optSame.filter(e => inTodRow(e, rowLabel) && dteBucket(e.dte) === colLabel)
+  );
+  function cellStat(items){ if(!items||!items.length) return null;
+    return {n:items.length, winRate:items.filter(e=>e.win).length/items.length, avgPnl:items.reduce((s,e)=>s+e.pnl,0)/items.length, totalPnl:items.reduce((s,e)=>s+e.pnl,0)}; }
+  const first0dte = cellStat(dteHeatCells[0][dteOrder.indexOf('0DTE')]);
+  const first1dte = cellStat(dteHeatCells[0][dteOrder.indexOf('1DTE')]);
+  const lastIdx = rowLabelsTOD.length-1;
+  const last0dte = cellStat(dteHeatCells[lastIdx][dteOrder.indexOf('0DTE')]);
+  const last1dte = cellStat(dteHeatCells[lastIdx][dteOrder.indexOf('1DTE')]);
+  let calloutParts = [];
+  if (first1dte) calloutParts.push('<b>'+rowLabelsTOD[0]+' + 1DTE</b>: '+fmtPct(first1dte.winRate)+' win rate, '+fmt$(first1dte.avgPnl)+'/trade avg (n='+first1dte.n+').');
+  if (last0dte && last1dte) calloutParts.push('<b>'+rowLabelsTOD[lastIdx]+'</b> 0DTE '+fmt$(last0dte.avgPnl)+'/trade, 1DTE '+fmt$(last1dte.avgPnl)+'/trade.');
+  document.getElementById('tod-dte-callout').innerHTML = calloutParts.join(' ');
+  document.getElementById('tod-dte-num').textContent = first1dte ? (rowLabelsTOD[0]+'×1DTE: '+fmt$(first1dte.avgPnl)+'/trade') : '';
+
+  // ---- 6. Day of week ----
+  const dowOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const dowGroups = dowOrder.map(d=>{
+    const items = same.filter(e=>e.dow===d);
+    return {label:d.slice(0,3), n:items.length, winRate: items.length?items.filter(e=>e.win).length/items.length:0, totalPnl: items.reduce((s,e)=>s+e.pnl,0)};
+  });
+  renderBarChart('dow-chart', dowGroups, {valueKey:'totalPnl'});
+  const bestDow = dowGroups.reduce((a,b)=>a.totalPnl>b.totalPnl?a:b);
+  const worstDow = dowGroups.reduce((a,b)=>a.totalPnl<b.totalPnl?a:b);
+  document.getElementById('dow-num').textContent = bestDow.label+' '+fmt$(bestDow.totalPnl)+' → '+worstDow.label+' '+fmt$(worstDow.totalPnl);
+
+  document.getElementById('dow-tod-label').textContent = hasTs
+    ? 'Day of Week × Time of Day (avg P&L/trade)'
+    : 'Day of Week × Quintile (avg P&L/trade) — no timestamps in this file, using order-within-day proxy';
+  const dowTodCells = renderHeatmap('dow-tod-heatmap', dowOrder, rowLabelsTOD, (rowLabel, colLabel) =>
+    same.filter(e => e.dow === rowLabel && inTodRow(e, colLabel))
+  );
+  // find worst and best cell in the grid
+  let worstCell = null, bestCell = null;
+  dowOrder.forEach((d,ri)=> rowLabelsTOD.forEach((t,ci)=>{
+    const items = dowTodCells[ri][ci];
+    if (items && items.length>=5) {
+      const avg = items.reduce((s,e)=>s+e.pnl,0)/items.length;
+      const stat = {d,t,avg,n:items.length,winRate:items.filter(e=>e.win).length/items.length};
+      if (!worstCell || avg<worstCell.avg) worstCell = stat;
+      if (!bestCell || avg>bestCell.avg) bestCell = stat;
+    }
+  }));
+  document.getElementById('dow-tod-callout').innerHTML = (worstCell && bestCell) ?
+    '<b>Best cell:</b> '+bestCell.d+' '+bestCell.t+' ('+fmt$(bestCell.avg)+'/trade, '+fmtPct(bestCell.winRate)+' win, n='+bestCell.n+'). '+
+    '<b>Worst cell:</b> '+worstCell.d+' '+worstCell.t+' ('+fmt$(worstCell.avg)+'/trade, '+fmtPct(worstCell.winRate)+' win, n='+worstCell.n+').' : '';
+
+  // ---- 7. Overtrading ----
+  const dayEntries = Object.keys(dailyPnl).map(d=>({date:d, n: byDay[d].length, pnl: dailyPnl[d]}));
+  const otGroups = quantileBuckets(dayEntries, d=>d.n, 4, (items)=>{
+    const vals = items.map(x=>x.n);
+    return Math.min(...vals)+'-'+Math.max(...vals)+' trades/day';
+  }).map(g=>({label:g.label, n:g.n, avgPnl: g.items.reduce((s,x)=>s+x.pnl,0)/g.items.length}));
+  renderBarChart('overtrading-chart', otGroups, {valueKey:'avgPnl'});
+
+  // ---- 8. Equity curve ----
+  const sortedDays = Object.keys(dailyPnl).sort();
+  let cum = 0;
+  const points = sortedDays.map(d=>{ cum += dailyPnl[d]; return cum; });
+  const svg = document.getElementById('equity-svg');
+  const w=1000,h=220,pad=10;
+  const minV = Math.min(0,...points), maxV = Math.max(0,...points);
+  const range = (maxV-minV)||1;
+  const xStep = (w-2*pad)/Math.max(1,points.length-1);
+  const yOf = v => h-pad - ((v-minV)/range)*(h-2*pad);
+  const path = points.map((v,i)=> (i===0?'M':'L') + (pad+i*xStep).toFixed(1)+','+yOf(v).toFixed(1)).join(' ');
+  const zeroY = yOf(0);
+  const areaPath = path + ' L' + (pad+(points.length-1)*xStep).toFixed(1)+','+zeroY.toFixed(1) + ' L'+pad+','+zeroY.toFixed(1)+' Z';
+  svg.innerHTML =
+    '<line x1="'+pad+'" y1="'+zeroY.toFixed(1)+'" x2="'+(w-pad)+'" y2="'+zeroY.toFixed(1)+'" stroke="#2a2e38" stroke-width="1"/>'+
+    '<path d="'+areaPath+'" fill="rgba(212,175,106,0.12)" stroke="none"/>'+
+    '<path d="'+path+'" fill="none" stroke="#d4af6a" stroke-width="2"/>';
+
+  // ---- 9. Underlying table ----
+  const byU = {};
+  same.forEach(e=>{ (byU[e.underlying]=byU[e.underlying]||[]).push(e); });
+  const uRows = Object.keys(byU).map(u=>{
+    const items = byU[u];
+    return {u, n:items.length, winRate: items.filter(e=>e.win).length/items.length, total: items.reduce((s,e)=>s+e.pnl,0)};
+  }).sort((a,b)=>a.total-b.total);
+  document.getElementById('underlying-table').innerHTML = uRows.map(r=>
+    '<tr><td>'+r.u+'</td><td>'+r.n+'</td><td>'+fmtPct(r.winRate)+'</td><td class="'+(r.total>=0?'pos':'neg')+'">'+fmt$(r.total)+'</td></tr>'
+  ).join('');
+
+  document.getElementById('dash').classList.add('show');
+  document.getElementById('empty-note').style.display='none';
+}
+
+// ============ DATE FILTER ============
+let allEpisodes = [];
+let uniqueDates = [];
+let filterListenersBound = false;
+
+function fmtDateShort(d){
+  const [y,m,dd] = d.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(m,10)-1]+' '+parseInt(dd,10)+', '+y;
+}
+
+function setupFilterBar(episodes){
+  allEpisodes = episodes;
+  uniqueDates = [...new Set(episodes.filter(e=>e.same_day).map(e=>e.start_date))].sort();
+  const startSlider = document.getElementById('slider-start');
+  const endSlider = document.getElementById('slider-end');
+  const maxIdx = Math.max(0, uniqueDates.length - 1);
+  startSlider.min = 0; startSlider.max = maxIdx; startSlider.value = 0;
+  endSlider.min = 0; endSlider.max = maxIdx; endSlider.value = maxIdx;
+
+  // populate month dropdown
+  const months = [...new Set(uniqueDates.map(d=>d.slice(0,7)))];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const sel = document.getElementById('month-select');
+  sel.innerHTML = '<option value="">Jump to month…</option>' + months.map(m=>{
+    const [y,mo] = m.split('-');
+    return '<option value="'+m+'">'+monthNames[parseInt(mo,10)-1]+' '+y+'</option>';
+  }).join('');
+
+  function applyPreset(p){
+    const maxI = parseInt(document.getElementById('slider-end').max);
+    if (p === 'all') {
+      document.getElementById('slider-start').value = 0;
+      document.getElementById('slider-end').value = maxI;
+    } else if (p === 'recent') {
+      const idx = uniqueDates.findIndex(d => d >= '2026-03-01');
+      document.getElementById('slider-start').value = idx >= 0 ? idx : 0;
+      document.getElementById('slider-end').value = maxI;
+    } else {
+      const n = parseInt(p);
+      document.getElementById('slider-start').value = Math.max(0, maxI - n + 1);
+      document.getElementById('slider-end').value = maxI;
+    }
+  }
+
+  if (!filterListenersBound) {
+    filterListenersBound = true;
+    startSlider.addEventListener('input', ()=>{
+      if (parseInt(startSlider.value) > parseInt(endSlider.value)) startSlider.value = endSlider.value;
+      setActivePreset(null); applyFilter();
+    });
+    endSlider.addEventListener('input', ()=>{
+      if (parseInt(endSlider.value) < parseInt(startSlider.value)) endSlider.value = startSlider.value;
+      setActivePreset(null); applyFilter();
+    });
+    document.querySelectorAll('.preset-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        applyPreset(btn.dataset.preset);
+        document.getElementById('month-select').value = '';
+        setActivePreset(btn);
+        applyFilter();
+      });
+    });
+    document.getElementById('month-select').addEventListener('change', (e)=>{
+      const m = e.target.value;
+      if (!m) return;
+      const idxs = uniqueDates.map((d,i)=>({d,i})).filter(x=>x.d.startsWith(m)).map(x=>x.i);
+      if (idxs.length){
+        document.getElementById('slider-start').value = Math.min(...idxs);
+        document.getElementById('slider-end').value = Math.max(...idxs);
+        setActivePreset(null);
+        applyFilter();
+      }
+    });
+  }
+  // default view: Mar 2026 onward, if that much history exists; otherwise full range
+  const hasRecentCutoff = uniqueDates.some(d => d >= '2026-03-01');
+  const defaultPreset = hasRecentCutoff ? 'recent' : 'all';
+  applyPreset(defaultPreset);
+  setActivePreset(document.querySelector('.preset-btn[data-preset="'+defaultPreset+'"]'));
+  applyFilter();
+}
+
+function setActivePreset(btn){
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function applyFilter(){
+  const startIdx = parseInt(document.getElementById('slider-start').value);
+  const endIdx = parseInt(document.getElementById('slider-end').value);
+  const startDate = uniqueDates[startIdx];
+  const endDate = uniqueDates[endIdx];
+  const filtered = allEpisodes.filter(e => e.start_date >= startDate && e.start_date <= endDate);
+
+  const nDaysInRange = endIdx - startIdx + 1;
+  document.getElementById('filter-range-display').textContent = fmtDateShort(startDate) + '  →  ' + fmtDateShort(endDate);
+  document.getElementById('filter-range-sub').textContent = nDaysInRange + ' of ' + uniqueDates.length + ' trading days selected';
+
+  const maxI = parseInt(document.getElementById('slider-end').max) || 1;
+  const pctStart = (startIdx / maxI) * 100;
+  const pctEnd = (endIdx / maxI) * 100;
+  const fill = document.getElementById('slider-track-fill');
+  fill.style.left = pctStart + '%';
+  fill.style.width = Math.max(0, (pctEnd - pctStart)) + '%';
+
+  renderDashboard(filtered);
+}
+
+// ============ DATA SOURCE / AUTO-LOAD ============
+// Default location the dashboard tries to auto-load on every page open.
+// Override via ?data=path/to/file.csv or ?data=https://full/url.csv in the page URL.
+const DEFAULT_DATA_PATH = 'activities.csv';
+function resolveDataUrl(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get('data') || DEFAULT_DATA_PATH;
+}
+
+function setDataStatus(state, text, sub){
+  const dot = document.getElementById('data-status-dot');
+  dot.className = 'data-status-dot' + (state ? ' '+state : '');
+  document.getElementById('data-status-text').textContent = text;
+  document.getElementById('data-status-sub').textContent = sub || '';
+}
+
+function showManualUpload(show, title, sub){
+  document.getElementById('drop-zone').style.display = show ? 'flex' : 'none';
+  if (title) document.getElementById('upload-title').textContent = title;
+  if (sub) document.getElementById('upload-sub').textContent = sub;
+}
+
+function autoLoadData(){
+  const url = resolveDataUrl();
+  const isRemote = /^https?:\/\//i.test(url);
+  const bustUrl = url + (url.includes('?') ? '&' : '?') + '_ts=' + Date.now();
+  setDataStatus('loading', 'Loading '+url+' …', '');
+
+  fetch(bustUrl, {cache:'no-store'})
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      return res.text();
+    })
+    .then(csvText => {
+      Papa.parse(csvText, {
+        header:true, skipEmptyLines:true,
+        complete: (results)=>{
+          if (!results.data.length) throw new Error('File parsed but contained no rows');
+          const episodes = processTrades(results.data);
+          setupFilterBar(episodes);
+          const now = new Date();
+          setDataStatus('ok', 'Loaded from '+url, 'Refreshed '+now.toLocaleTimeString());
+          showManualUpload(false);
+        }
+      });
+    })
+    .catch(err => {
+      console.warn('Auto-load failed:', err);
+      setDataStatus('err', 'Couldn\'t auto-load '+url,
+        isRemote ? String(err.message||err) : 'Not found, or this page is open as a local file (file://) — auto-load needs GitHub Pages or a local web server.');
+      document.getElementById('empty-note').style.display = allEpisodes.length ? 'none' : 'block';
+      document.getElementById('empty-note').textContent = 'No data loaded yet — upload a CSV below to generate the dashboard.';
+      showManualUpload(true,
+        'Upload activity export (.csv)',
+        'Auto-load couldn\'t reach "'+url+'". Drop a file here, or fix hosting (see Refresh Data button) and click it again.');
+    });
+}
+
+// ============ FILE HANDLING (manual fallback) ============
+function handleFile(file){
+  Papa.parse(file, {
+    header:true, skipEmptyLines:true,
+    complete: (results)=>{
+      const episodes = processTrades(results.data);
+      setupFilterBar(episodes);
+      setDataStatus('ok', 'Loaded from manually uploaded file: '+file.name, 'Refreshed '+new Date().toLocaleTimeString());
+      showManualUpload(false);
+    }
+  });
+}
+document.getElementById('upload-btn').addEventListener('click', ()=>document.getElementById('file-input').click());
+document.getElementById('file-input').addEventListener('change', (e)=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('dragover'); });
+dz.addEventListener('dragleave', ()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop', e=>{
+  e.preventDefault(); dz.classList.remove('dragover');
+  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+document.getElementById('refresh-btn').addEventListener('click', autoLoadData);
+document.getElementById('toggle-upload-btn').addEventListener('click', ()=>{
+  const dz = document.getElementById('drop-zone');
+  const showing = dz.style.display !== 'none';
+  showManualUpload(!showing, 'Upload activity export (.csv)', 'Same format as your broker\'s activities export — TBIL, dividends, and interest rows are filtered out automatically.');
+});
+
+// Kick off auto-load on page open
+autoLoadData();
+</script>
+</body>
+</html>
