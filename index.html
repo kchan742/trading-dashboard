@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Day-Trading Behavioral Dashboard</title>
+<title>Trading Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script>
@@ -43,6 +43,7 @@ License: MIT
     padding:14px 18px; margin-bottom:16px; flex-wrap:wrap;
   }
   .data-bar-left{ display:flex; align-items:center; gap:12px; }
+  .data-bar-right{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .data-status-dot{ width:9px; height:9px; border-radius:50%; background:var(--text-faint); flex-shrink:0; transition:background .2s; }
   .data-status-dot.ok{ background:var(--green); box-shadow:0 0 6px rgba(79,209,165,0.6); }
   .data-status-dot.err{ background:var(--red); }
@@ -101,6 +102,10 @@ License: MIT
     pointer-events:auto; width:16px; height:16px; border-radius:50%;
     background:var(--gold); cursor:pointer; border:2px solid #0b0d12; box-shadow:0 0 0 1px rgba(212,175,106,0.3);
   }
+  .date-picker-row{ display:flex; gap:18px; margin:2px 0 12px; align-items:center; flex-wrap:wrap; }
+  .date-picker-row label{ font-size:12px; color:var(--text-faint); display:flex; align-items:center; gap:7px; }
+  .date-picker-row input[type=date]{ color-scheme:dark; }
+
   .filter-presets{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; align-items:center; }
   .preset-btn{
     background:var(--panel2); color:var(--text-dim); border:1px solid var(--border); padding:6px 13px;
@@ -190,7 +195,7 @@ License: MIT
 <body>
 <div class="wrap">
   <header>
-    <h1>Day-Trading Behavioral Dashboard</h1>
+    <h1>Trading Dashboard</h1>
     <div class="subtitle">Reconstructs entry→flat trade episodes from your broker activity export and surfaces time-of-day, sizing, and discipline patterns. Uses real entry timestamps (converted to ET) when your export includes them; falls back to an order-within-day proxy otherwise.</div>
     <div class="meta-row" id="meta-row" style="display:none;"></div>
   </header>
@@ -203,7 +208,11 @@ License: MIT
         <div class="data-status-sub" id="data-status-sub"></div>
       </div>
     </div>
-    <button class="btn" id="refresh-btn">↻ Refresh Data</button>
+    <div class="data-bar-right">
+      <input type="text" id="data-source-input" class="filter-select" style="width:220px;" placeholder="filename, e.g. activities.csv">
+      <button class="btn secondary small" id="data-source-save-btn">Save</button>
+      <button class="btn" id="refresh-btn">↻ Refresh Data</button>
+    </div>
   </div>
   <div style="text-align:right; margin:-10px 0 16px;">
     <button class="link-btn" id="toggle-upload-btn">Upload a file manually instead</button>
@@ -238,6 +247,10 @@ License: MIT
         <div class="slider-track-fill" id="slider-track-fill"></div>
         <input type="range" id="slider-start" class="range-slider" min="0" max="0" step="1" value="0">
         <input type="range" id="slider-end" class="range-slider" min="0" max="0" step="1" value="0">
+      </div>
+      <div class="date-picker-row">
+        <label>From <input type="date" id="date-start" class="filter-select"></label>
+        <label>To <input type="date" id="date-end" class="filter-select"></label>
       </div>
       <div class="filter-presets" id="filter-presets">
         <button class="preset-btn" data-preset="recent">Mar 2026 → present</button>
@@ -700,15 +713,17 @@ function renderDashboard(episodes) {
     const rest = restByDay[d]||0;
     if (firstByDay[d] > 0) posQ1Days.push(rest); else negQ1Days.push(rest);
   });
-  const avgRestPos = posQ1Days.length? posQ1Days.reduce((a,b)=>a+b,0)/posQ1Days.length : 0;
-  const avgRestNeg = negQ1Days.length? negQ1Days.reduce((a,b)=>a+b,0)/negQ1Days.length : 0;
+  const avgRestPos = posQ1Days.length? posQ1Days.reduce((a,b)=>a+b,0)/posQ1Days.length : null;
+  const avgRestNeg = negQ1Days.length? negQ1Days.reduce((a,b)=>a+b,0)/negQ1Days.length : null;
+  const fmtOrNA = v => v===null ? 'n/a' : fmt$(v);
+  const clsOrNA = v => v===null ? '' : (v>=0?'pos':'neg');
   const rowLabel = hasTs ? 'First trade' : 'Q1';
   document.getElementById('q1-table').innerHTML =
-    '<tr><td>'+rowLabel+' finished positive</td><td>'+posQ1Days.length+'</td><td class="pos">avg &gt; 0</td><td class="'+(avgRestPos>=0?'pos':'neg')+'">'+fmt$(avgRestPos)+'</td></tr>'+
-    '<tr><td>'+rowLabel+' finished negative/flat</td><td>'+negQ1Days.length+'</td><td class="neg">avg ≤ 0</td><td class="'+(avgRestNeg>=0?'pos':'neg')+'">'+fmt$(avgRestNeg)+'</td></tr>';
+    '<tr><td>'+rowLabel+' finished positive</td><td>'+posQ1Days.length+'</td><td class="pos">avg &gt; 0</td><td class="'+clsOrNA(avgRestPos)+'">'+fmtOrNA(avgRestPos)+'</td></tr>'+
+    '<tr><td>'+rowLabel+' finished negative/flat</td><td>'+negQ1Days.length+'</td><td class="neg">avg ≤ 0</td><td class="'+clsOrNA(avgRestNeg)+'">'+fmtOrNA(avgRestNeg)+'</td></tr>';
   document.getElementById('q1-callout').innerHTML =
-    '<b>Leading indicator:</b> on days your '+(hasTs?'literal first trade':'early trades (Q1)')+' finish'+(hasTs?'s':'')+' positive, the rest of the day averages <span class="stat pos">'+fmt$(avgRestPos)+'</span>. '+
-    'On days it finishes negative or flat, the rest of the day averages <span class="stat neg">'+fmt$(avgRestNeg)+'</span>.';
+    '<b>Leading indicator:</b> on days your '+(hasTs?'literal first trade':'early trades (Q1)')+' finish'+(hasTs?'es':'')+' positive, the rest of the day averages <span class="stat pos">'+fmtOrNA(avgRestPos)+'</span> (n='+posQ1Days.length+'). '+
+    'On days it finishes negative or flat, the rest of the day averages <span class="stat neg">'+fmtOrNA(avgRestNeg)+'</span> (n='+negQ1Days.length+').';
 
   // ---- 3. Sizing ----
   const sizeGroups = quantileBuckets(same, e=>e.initial_qty, 5, (items,i)=>{
@@ -901,6 +916,13 @@ function setupFilterBar(episodes){
   startSlider.min = 0; startSlider.max = maxIdx; startSlider.value = 0;
   endSlider.min = 0; endSlider.max = maxIdx; endSlider.value = maxIdx;
 
+  const dateStartEl = document.getElementById('date-start');
+  const dateEndEl = document.getElementById('date-end');
+  if (uniqueDates.length) {
+    dateStartEl.min = dateEndEl.min = uniqueDates[0];
+    dateStartEl.max = dateEndEl.max = uniqueDates[maxIdx];
+  }
+
   // populate month dropdown
   const months = [...new Set(uniqueDates.map(d=>d.slice(0,7)))];
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -955,6 +977,27 @@ function setupFilterBar(episodes){
         applyFilter();
       }
     });
+    document.getElementById('date-start').addEventListener('change', (e)=>{
+      const v = e.target.value;
+      if (!v || !uniqueDates.length) return;
+      // snap forward to the first trading day on/after the chosen date
+      let idx = uniqueDates.findIndex(d => d >= v);
+      if (idx === -1) idx = uniqueDates.length - 1;
+      document.getElementById('slider-start').value = idx;
+      if (idx > parseInt(document.getElementById('slider-end').value)) document.getElementById('slider-end').value = idx;
+      setActivePreset(null); applyFilter();
+    });
+    document.getElementById('date-end').addEventListener('change', (e)=>{
+      const v = e.target.value;
+      if (!v || !uniqueDates.length) return;
+      // snap backward to the last trading day on/before the chosen date
+      let idx = -1;
+      for (let i=0;i<uniqueDates.length;i++){ if (uniqueDates[i] <= v) idx = i; }
+      if (idx === -1) idx = 0;
+      document.getElementById('slider-end').value = idx;
+      if (idx < parseInt(document.getElementById('slider-start').value)) document.getElementById('slider-start').value = idx;
+      setActivePreset(null); applyFilter();
+    });
   }
   // default view: Mar 2026 onward, if that much history exists; otherwise full range
   const hasRecentCutoff = uniqueDates.some(d => d >= '2026-03-01');
@@ -980,6 +1023,11 @@ function applyFilter(){
   document.getElementById('filter-range-display').textContent = fmtDateShort(startDate) + '  →  ' + fmtDateShort(endDate);
   document.getElementById('filter-range-sub').textContent = nDaysInRange + ' of ' + uniqueDates.length + ' trading days selected';
 
+  const dateStartEl = document.getElementById('date-start');
+  const dateEndEl = document.getElementById('date-end');
+  if (document.activeElement !== dateStartEl) dateStartEl.value = startDate;
+  if (document.activeElement !== dateEndEl) dateEndEl.value = endDate;
+
   const maxI = parseInt(document.getElementById('slider-end').max) || 1;
   const pctStart = (startIdx / maxI) * 100;
   const pctEnd = (endIdx / maxI) * 100;
@@ -992,11 +1040,17 @@ function applyFilter(){
 
 // ============ DATA SOURCE / AUTO-LOAD ============
 // Default location the dashboard tries to auto-load on every page open.
-// Override via ?data=path/to/file.csv or ?data=https://full/url.csv in the page URL.
-const DEFAULT_DATA_PATH = 'activities.csv';
+// Resolution order: ?data= URL param > saved preference (this browser) > DEFAULT_DATA_PATH.
+const DEFAULT_DATA_PATH = 'daytrading-activity.csv';
+function getSavedDataPath(){
+  try { return localStorage.getItem('trading-dashboard-data-path'); } catch(e) { return null; }
+}
+function setSavedDataPath(v){
+  try { localStorage.setItem('trading-dashboard-data-path', v); } catch(e) { /* storage unavailable, ignore */ }
+}
 function resolveDataUrl(){
   const params = new URLSearchParams(window.location.search);
-  return params.get('data') || DEFAULT_DATA_PATH;
+  return params.get('data') || getSavedDataPath() || DEFAULT_DATA_PATH;
 }
 
 function setDataStatus(state, text, sub){
@@ -1039,7 +1093,7 @@ function autoLoadData(){
     .catch(err => {
       console.warn('Auto-load failed:', err);
       setDataStatus('err', 'Couldn\'t auto-load '+url,
-        isRemote ? String(err.message||err) : 'Not found, or this page is open as a local file (file://) — auto-load needs GitHub Pages or a local web server.');
+        isRemote ? String(err.message||err) : 'Not found at that filename, or this page is open locally (file://) — auto-load needs GitHub Pages or a local web server. Check the filename field above and click Save.');
       document.getElementById('empty-note').style.display = allEpisodes.length ? 'none' : 'block';
       document.getElementById('empty-note').textContent = 'No data loaded yet — upload a CSV below to generate the dashboard.';
       showManualUpload(true,
@@ -1075,6 +1129,15 @@ document.getElementById('toggle-upload-btn').addEventListener('click', ()=>{
   const showing = dz.style.display !== 'none';
   showManualUpload(!showing, 'Upload activity export (.csv)', 'Same format as your broker\'s activities export — TBIL, dividends, and interest rows are filtered out automatically.');
 });
+document.getElementById('data-source-input').value = resolveDataUrl();
+function saveDataSource(){
+  const v = document.getElementById('data-source-input').value.trim();
+  if (!v) return;
+  setSavedDataPath(v);
+  autoLoadData();
+}
+document.getElementById('data-source-save-btn').addEventListener('click', saveDataSource);
+document.getElementById('data-source-input').addEventListener('keydown', (e)=>{ if (e.key==='Enter') saveDataSource(); });
 
 // Kick off auto-load on page open
 autoLoadData();
