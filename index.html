@@ -132,6 +132,14 @@ License: MIT
   .kpi .value.pos{ color:var(--green); }
   .kpi .value.neg{ color:var(--red); }
 
+    .instrument-split{ display:flex; gap:10px; margin-bottom:36px; flex-wrap:wrap; }
+  .split-chip{
+    background:var(--panel); border:1px solid var(--border); border-radius:9px;
+    padding:9px 16px; font-size:12.5px; display:flex; align-items:center; gap:8px;
+  }
+  .split-chip .split-label{ color:var(--text-faint); }
+  .split-chip .split-val{ font-family:'IBM Plex Mono',monospace; font-weight:600; }
+
   section.block{ margin-bottom:44px; }
   .block-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px; flex-wrap:wrap; gap:8px;}
   .block-head h2{
@@ -216,6 +224,20 @@ License: MIT
   </div>
   <div style="text-align:right; margin:-10px 0 16px;">
     <button class="link-btn" id="toggle-upload-btn">Upload a file manually instead</button>
+    <span style="color:var(--text-faint);"> · </span>
+    <button class="link-btn" id="toggle-excluded-btn">Edit excluded symbols</button>
+  </div>
+  <div class="data-bar" id="excluded-bar" style="display:none;">
+    <div class="data-bar-left">
+      <div>
+        <div class="data-status-text">Excluded symbols</div>
+        <div class="data-status-sub">Comma-separated. These are treated as cash-management vehicles, not trades (e.g. TBIL). Matched against underlying symbol.</div>
+      </div>
+    </div>
+    <div class="data-bar-right">
+      <input type="text" id="excluded-input" class="filter-select" style="width:260px;" placeholder="TBIL, ZMMK, ...">
+      <button class="btn secondary small" id="excluded-save-btn">Save &amp; Reload</button>
+    </div>
   </div>
 
   <div class="upload-zone" id="drop-zone" style="display:none;">
@@ -263,6 +285,7 @@ License: MIT
     </div>
 
     <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="instrument-split" id="instrument-split"></div>
 
     <section class="block">
       <div class="block-head"><h2>1 · Time of Day</h2><span class="num" id="tod-num"></span></div>
@@ -291,7 +314,7 @@ License: MIT
 
     <section class="block">
       <div class="block-head"><h2>3 · Position Sizing &amp; Trade Management</h2><span class="num" id="size-num"></span></div>
-      <div class="block-desc">Initial entry size (first fill only, not scaled-in totals) vs. outcome, and whether trades you actively managed (multiple fills) outperformed single lump in/out trades.</div>
+      <div class="block-desc">Initial entry size (first fill only, not scaled-in totals) vs. outcome, and whether trades you actively managed (multiple fills) outperformed single lump in/out trades. The contract-count chart is options only — share quantities aren't a comparable unit.</div>
       <div class="panel">
         <div class="grid-2">
           <div>
@@ -383,14 +406,14 @@ License: MIT
       <div class="block-head"><h2>10 · Instrument Breakdown</h2></div>
       <div class="panel">
         <table>
-          <thead><tr><th>Underlying</th><th>Trades</th><th>Win Rate</th><th>Total P&amp;L</th></tr></thead>
+          <thead><tr><th>Underlying</th><th>Type</th><th>Trades</th><th>Win Rate</th><th>Total P&amp;L</th></tr></thead>
           <tbody id="underlying-table"></tbody>
         </table>
       </div>
     </section>
 
     <footer>
-      Same-day (open→flat) episodes only. Multi-day holds are excluded from this view — <span id="multiday-note"></span>.
+      Same-day (open→flat) episodes only. Multi-day holds and still-open/dangling positions are excluded from this view — <span id="multiday-note"></span>.
       Time of day uses real entry timestamps (converted to US Eastern) when available in your export; otherwise falls back to an order-within-day proxy.
     </footer>
   </div>
@@ -424,15 +447,29 @@ const TOD_ORDER = ['Open (9:30-10:00)','Early (10:00-11:30)','Lunch (11:30-14:00
 const TOD_SHORT = {'Open (9:30-10:00)':'Open','Early (10:00-11:30)':'Early','Lunch (11:30-14:00)':'Lunch','Close (14:00-16:00)':'Close'};
 const TOD_SHORT_ORDER = ['Open','Early','Lunch','Close'];
 
+// ============ EXCLUDED SYMBOLS (cash-sweep / non-trade tickers) ============
+const DEFAULT_EXCLUDED_SYMBOLS = ['TBIL', 'ZMMK', 'DLR', 'DLR.U'];
+function getExcludedSymbols(){
+  try {
+    const saved = localStorage.getItem('trading-dashboard-excluded-symbols');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return DEFAULT_EXCLUDED_SYMBOLS;
+}
+function setExcludedSymbols(list){
+  try { localStorage.setItem('trading-dashboard-excluded-symbols', JSON.stringify(list)); } catch(e) {}
+}
+
 // ============ CORE EPISODE RECONSTRUCTION ============
 function processTrades(rows) {
   const hasTimestamps = rows.length > 0 && 'effective_at' in rows[0];
+  const excluded = new Set(getExcludedSymbols().map(s=>s.trim().toUpperCase()));
 
   let df = hasTimestamps
     ? rows.filter(r => r.effective_at && /^\d{4}-\d{2}-\d{2}T/.test(r.effective_at))
     : rows.filter(r => r.transaction_date && /^\d{4}-\d{2}-\d{2}$/.test(r.transaction_date));
   df = df.filter(r => (r.activity_type === 'Trade' || r.activity_type === 'OptionExpiry'));
-  df = df.filter(r => r.symbol !== 'TBIL');
+  df = df.filter(r => !excluded.has((r['underlying symbol']||r.symbol||'').trim().toUpperCase()));
 
   df.forEach((r, i) => {
     r.orig_order = i;
@@ -524,7 +561,7 @@ function processTrades(rows) {
     e.still_open = !!e.still_open;
     e.pnl = e.net_cash;
     e.win = e.pnl > 0;
-    e.same_day = e.start_date === e.end_date;
+    e.same_day = e.start_date === e.end_date && !e.still_open;
     e.scaled_entry = e.n_entry_txns > 1;
     e.scaled_exit = e.n_exit_txns > 1;
     e.hasTimestamps = hasTimestamps;
@@ -652,12 +689,28 @@ function renderDashboard(episodes) {
     '<div class="kpi"><div class="label">'+k.label+'</div><div class="value '+k.cls+'">'+k.value+'</div></div>'
   ).join('');
 
+  // Options vs Shares split (shares get no time-of-day breakdown, just reflected in aggregate accounting)
+  const optionEps = same.filter(e=>e.is_option);
+  const shareEps = same.filter(e=>!e.is_option);
+  function splitStat(items){
+    return {n:items.length, pnl: items.reduce((s,e)=>s+e.pnl,0), winRate: items.length? items.filter(e=>e.win).length/items.length : 0};
+  }
+  const optStat = splitStat(optionEps), shrStat = splitStat(shareEps);
+  const splitEl = document.getElementById('instrument-split');
+  if (shrStat.n > 0) {
+    splitEl.innerHTML =
+      '<div class="split-chip"><span class="split-label">Options</span><span class="split-val '+(optStat.pnl>=0?'pos':'neg')+'">'+fmt$(optStat.pnl)+'</span><span class="split-label">('+optStat.n+' trades, '+fmtPct(optStat.winRate)+' win)</span></div>'+
+      '<div class="split-chip"><span class="split-label">Shares</span><span class="split-val '+(shrStat.pnl>=0?'pos':'neg')+'">'+fmt$(shrStat.pnl)+'</span><span class="split-label">('+shrStat.n+' trades, '+fmtPct(shrStat.winRate)+' win)</span></div>';
+  } else {
+    splitEl.innerHTML = '';
+  }
+
   document.getElementById('meta-row').style.display='flex';
   const hasTs = same.length>0 && same[0].hasTimestamps;
   document.getElementById('meta-row').innerHTML =
     '<span>'+(days[0]||'—')+' → '+(days[days.length-1]||'—')+'</span><span>'+same.length+' day-trade episodes in view</span><span>'+avgTradesPerDay.toFixed(1)+' trades/day avg</span>'+
     '<span style="color:'+(hasTs?'var(--green)':'var(--gold)')+';">'+(hasTs?'✓ real timestamps (ET)':'⚠ order-based proxy (no timestamps)')+'</span>';
-  document.getElementById('multiday-note').textContent = multiDayCount+' multi-day episode'+(multiDayCount===1?'':'s')+' excluded';
+  document.getElementById('multiday-note').textContent = multiDayCount+' episode'+(multiDayCount===1?'':'s')+' excluded (multi-day holds, or single-leg/still-open positions like FX conversions)';
 
   // ---- 1. Time of day (real entry timestamps, ET) ----
   document.getElementById('quintile-callout').closest('section').querySelector('.block-desc').textContent = hasTs
@@ -726,12 +779,17 @@ function renderDashboard(episodes) {
     'On days it finishes negative or flat, the rest of the day averages <span class="stat neg">'+fmtOrNA(avgRestNeg)+'</span> (n='+negQ1Days.length+').';
 
   // ---- 3. Sizing ----
-  const sizeGroups = quantileBuckets(same, e=>e.initial_qty, 5, (items,i)=>{
+  // Contract-count sizing only makes sense for options (share quantities are a different unit
+  // entirely — 200 shares isn't "bigger" than 5 contracts in any comparable sense).
+  const sizingBase = same.filter(e=>e.is_option);
+  const sizeGroups = sizingBase.length ? quantileBuckets(sizingBase, e=>e.initial_qty, 5, (items,i)=>{
     const vals = items.map(x=>x.initial_qty);
     return Math.round(Math.min(...vals))+'-'+Math.round(Math.max(...vals))+' ctr';
-  });
+  }) : [];
   renderBarChart('size-chart', sizeGroups, {valueKey:'avgPnl'});
-  document.getElementById('size-num').textContent = 'smallest-size win rate '+fmtPct(sizeGroups[0].winRate)+' vs largest-size '+fmtPct(sizeGroups[4].winRate);
+  document.getElementById('size-num').textContent = sizeGroups.length
+    ? 'smallest-size win rate '+fmtPct(sizeGroups[0].winRate)+' vs largest-size '+fmtPct(sizeGroups[sizeGroups.length-1].winRate)+' (options only)'
+    : '';
 
   const scaledYes = same.filter(e=>e.scaled_entry);
   const scaledNo = same.filter(e=>!e.scaled_entry);
@@ -881,15 +939,20 @@ function renderDashboard(episodes) {
     '<path d="'+areaPath+'" fill="rgba(212,175,106,0.12)" stroke="none"/>'+
     '<path d="'+path+'" fill="none" stroke="#d4af6a" stroke-width="2"/>';
 
-  // ---- 9. Underlying table ----
+  // ---- 9. Underlying table (split by underlying + instrument type, so a ticker traded both
+  //         as options and shares shows up as two distinguishable rows rather than blending) ----
   const byU = {};
-  same.forEach(e=>{ (byU[e.underlying]=byU[e.underlying]||[]).push(e); });
-  const uRows = Object.keys(byU).map(u=>{
-    const items = byU[u];
-    return {u, n:items.length, winRate: items.filter(e=>e.win).length/items.length, total: items.reduce((s,e)=>s+e.pnl,0)};
+  same.forEach(e=>{
+    const key = e.underlying + '|' + (e.is_option ? 'Option' : 'Share');
+    (byU[key]=byU[key]||[]).push(e);
+  });
+  const uRows = Object.keys(byU).map(key=>{
+    const [u, type] = key.split('|');
+    const items = byU[key];
+    return {u, type, n:items.length, winRate: items.filter(e=>e.win).length/items.length, total: items.reduce((s,e)=>s+e.pnl,0)};
   }).sort((a,b)=>a.total-b.total);
   document.getElementById('underlying-table').innerHTML = uRows.map(r=>
-    '<tr><td>'+r.u+'</td><td>'+r.n+'</td><td>'+fmtPct(r.winRate)+'</td><td class="'+(r.total>=0?'pos':'neg')+'">'+fmt$(r.total)+'</td></tr>'
+    '<tr><td>'+r.u+'</td><td>'+r.type+'</td><td>'+r.n+'</td><td>'+fmtPct(r.winRate)+'</td><td class="'+(r.total>=0?'pos':'neg')+'">'+fmt$(r.total)+'</td></tr>'
   ).join('');
 
   document.getElementById('dash').classList.add('show');
@@ -1130,6 +1193,7 @@ document.getElementById('toggle-upload-btn').addEventListener('click', ()=>{
   showManualUpload(!showing, 'Upload activity export (.csv)', 'Same format as your broker\'s activities export — TBIL, dividends, and interest rows are filtered out automatically.');
 });
 document.getElementById('data-source-input').value = resolveDataUrl();
+document.getElementById('excluded-input').value = getExcludedSymbols().join(', ');
 function saveDataSource(){
   const v = document.getElementById('data-source-input').value.trim();
   if (!v) return;
@@ -1138,6 +1202,15 @@ function saveDataSource(){
 }
 document.getElementById('data-source-save-btn').addEventListener('click', saveDataSource);
 document.getElementById('data-source-input').addEventListener('keydown', (e)=>{ if (e.key==='Enter') saveDataSource(); });
+document.getElementById('toggle-excluded-btn').addEventListener('click', ()=>{
+  const bar = document.getElementById('excluded-bar');
+  bar.style.display = bar.style.display === 'none' ? 'flex' : 'none';
+});
+document.getElementById('excluded-save-btn').addEventListener('click', ()=>{
+  const list = document.getElementById('excluded-input').value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+  setExcludedSymbols(list);
+  autoLoadData();
+});
 
 // Kick off auto-load on page open
 autoLoadData();
