@@ -118,6 +118,23 @@ License: MIT
     border-radius:6px; font-family:'Inter',sans-serif; font-size:12px; cursor:pointer;
   }
 
+  .period-panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:22px; margin-bottom:36px;
+  }
+  .period-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+  .period-head h2{ font-family:'Fraunces',serif; font-weight:600; font-size:20px; margin:0; }
+  .period-head .num{ font-family:'IBM Plex Mono',monospace; color:var(--text-faint); font-size:12px; }
+  .period-cols{ display:grid; grid-template-columns:1fr auto 1fr; gap:18px; align-items:center; }
+  @media(max-width:700px){ .period-cols{ grid-template-columns:1fr; } .period-arrow{ transform:rotate(90deg); margin:4px auto;} }
+  .period-col{ text-align:center; }
+  .period-col .plabel{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); margin-bottom:6px; }
+  .period-col .pdaterange{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-faint); margin-bottom:10px; }
+  .period-col .pval{ font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:600; }
+  .period-col .psub{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-dim); margin-top:4px; }
+  .period-arrow{ font-size:22px; color:var(--text-faint); text-align:center; }
+  .period-delta{ text-align:center; margin-top:6px; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; }
+
   .kpi-grid{
     display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:36px;
   }
@@ -208,23 +225,7 @@ License: MIT
     <div class="meta-row" id="meta-row" style="display:none;"></div>
   </header>
 
-  <div class="data-bar" id="data-bar">
-    <div class="data-bar-left">
-      <div class="data-status-dot" id="data-status-dot"></div>
-      <div>
-        <div class="data-status-text" id="data-status-text">Loading data…</div>
-        <div class="data-status-sub" id="data-status-sub"></div>
-      </div>
-    </div>
-    <div class="data-bar-right">
-      <input type="text" id="data-source-input" class="filter-select" style="width:220px;" placeholder="filename, e.g. activities.csv">
-      <button class="btn secondary small" id="data-source-save-btn">Save</button>
-      <button class="btn" id="refresh-btn">↻ Refresh Data</button>
-    </div>
-  </div>
-  <div style="text-align:right; margin:-10px 0 16px;">
-    <button class="link-btn" id="toggle-upload-btn">Upload a file manually instead</button>
-    <span style="color:var(--text-faint);"> · </span>
+  <div style="text-align:right; margin:0 0 8px;">
     <button class="link-btn" id="toggle-excluded-btn">Edit excluded symbols</button>
   </div>
   <div class="data-bar" id="excluded-bar" style="display:none;">
@@ -240,7 +241,7 @@ License: MIT
     </div>
   </div>
 
-  <div class="upload-zone" id="drop-zone" style="display:none;">
+  <div class="upload-zone" id="drop-zone">
     <div class="upload-left">
       <div class="upload-icon">↑</div>
       <div class="upload-copy">
@@ -253,7 +254,7 @@ License: MIT
       <input type="file" id="file-input" accept=".csv">
     </div>
   </div>
-  <div id="empty-note" style="display:none;">Loading…</div>
+  <div id="empty-note">Upload a CSV to generate the dashboard.</div>
 
   <div id="dash">
     <div class="filter-bar panel">
@@ -286,6 +287,7 @@ License: MIT
 
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="instrument-split" id="instrument-split"></div>
+    <div id="period-compare"></div>
 
     <section class="block">
       <div class="block-head"><h2>1 · Time of Day</h2><span class="num" id="tod-num"></span></div>
@@ -325,6 +327,10 @@ License: MIT
             <div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;">Single-shot entry vs. scaled (multi-fill) entry</div>
             <div id="scaled-chart" class="barchart" style="height:170px;"></div>
           </div>
+        </div>
+        <div class="panel" style="margin-top:14px; padding:0; border:none; background:transparent;">
+          <div style="font-size:12.5px;color:var(--text-dim);margin:10px 0;">Scaled vs. single-shot performance by month (avg P&amp;L/trade) — is the "add to strength" edge holding up, or drifting?</div>
+          <div id="scaled-trend-heatmap"></div>
         </div>
       </div>
     </section>
@@ -403,7 +409,15 @@ License: MIT
     </section>
 
     <section class="block">
-      <div class="block-head"><h2>10 · Instrument Breakdown</h2></div>
+      <div class="block-head"><h2>10 · Monthly P&amp;L</h2><span class="num" id="monthly-num"></span></div>
+      <div class="block-desc">Same totals as the equity curve, broken out by calendar month so trend shifts and turning points are easier to spot than reading slope off a running total.</div>
+      <div class="panel">
+        <div id="monthly-chart" class="barchart"></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>11 · Instrument Breakdown</h2></div>
       <div class="panel">
         <table>
           <thead><tr><th>Underlying</th><th>Type</th><th>Trades</th><th>Win Rate</th><th>Total P&amp;L</th></tr></thead>
@@ -631,6 +645,61 @@ function cellColorFor(avgPnl, maxAbs){
   const alpha = Math.min(0.85, 0.12 + 0.73*(Math.abs(avgPnl)/maxAbs));
   return avgPnl>=0 ? 'rgba(79,209,165,'+alpha.toFixed(2)+')' : 'rgba(224,104,90,'+alpha.toFixed(2)+')';
 }
+function renderPeriodComparison(episodes){
+  const same = episodes.filter(e=>e.same_day);
+  const el = document.getElementById('period-compare');
+  if (!same.length) { el.innerHTML = ''; return; }
+
+  const dates = [...same.map(e=>e.start_date)].sort();
+  const maxDate = dates[dates.length-1];
+  const [my,mm,md] = maxDate.split('-').map(Number);
+  const cutoffMs = Date.UTC(my,mm-1,md) - 90*86400000;
+  const cutoff = new Date(cutoffMs).toISOString().slice(0,10);
+
+  const recent = same.filter(e=>e.start_date > cutoff);
+  const prior = same.filter(e=>e.start_date <= cutoff);
+
+  function stat(items){
+    return {n:items.length, pnl:items.reduce((s,e)=>s+e.pnl,0), winRate: items.length?items.filter(e=>e.win).length/items.length:0};
+  }
+  const r = stat(recent), p = stat(prior);
+
+  if (p.n === 0) {
+    el.innerHTML = '<div class="period-panel"><div class="period-head"><h2>Period Comparison</h2></div>'+
+      '<div style="color:var(--text-faint); font-size:13px;">Not enough trading history before the last 90 days yet for a comparison — check back once you have a longer track record.</div></div>';
+    return;
+  }
+
+  const pnlDelta = r.pnl - p.pnl;
+  const wrDeltaPts = (r.winRate - p.winRate) * 100;
+  const priorDates = prior.map(e=>e.start_date).sort();
+  const recentDates = recent.map(e=>e.start_date).sort();
+
+  const deltaColor = pnlDelta >= 0 ? 'var(--green)' : 'var(--red)';
+  const deltaArrow = pnlDelta >= 0 ? '▲' : '▼';
+
+  el.innerHTML =
+    '<div class="period-panel">'+
+      '<div class="period-head"><h2>Period Comparison</h2><span class="num">last 90 days vs. everything before</span></div>'+
+      '<div class="period-cols">'+
+        '<div class="period-col">'+
+          '<div class="plabel">Prior History</div>'+
+          '<div class="pdaterange">'+fmtDateShort(priorDates[0])+' → '+fmtDateShort(priorDates[priorDates.length-1])+'</div>'+
+          '<div class="pval '+(p.pnl>=0?'pos':'neg')+'">'+fmt$(p.pnl)+'</div>'+
+          '<div class="psub">'+fmtPct(p.winRate)+' win · '+p.n+' trades</div>'+
+        '</div>'+
+        '<div class="period-arrow">→</div>'+
+        '<div class="period-col">'+
+          '<div class="plabel">Last 90 Days</div>'+
+          '<div class="pdaterange">'+fmtDateShort(recentDates[0])+' → '+fmtDateShort(recentDates[recentDates.length-1])+'</div>'+
+          '<div class="pval '+(r.pnl>=0?'pos':'neg')+'">'+fmt$(r.pnl)+'</div>'+
+          '<div class="psub">'+fmtPct(r.winRate)+' win · '+r.n+' trades</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="period-delta" style="color:'+deltaColor+';">'+deltaArrow+' '+fmt$(Math.abs(pnlDelta))+' '+(pnlDelta>=0?'better':'worse')+' than prior history, win rate '+(wrDeltaPts>=0?'+':'')+wrDeltaPts.toFixed(1)+' pts</div>'+
+    '</div>';
+}
+
 function renderHeatmap(containerId, rowLabels, colLabels, itemsFn) {
   const cells = rowLabels.map(r => colLabels.map(c => itemsFn(r,c)));
   let maxAbs = 1;
@@ -799,6 +868,20 @@ function renderDashboard(episodes) {
   ];
   renderBarChart('scaled-chart', scaledGroups, {valueKey:'avgPnl'});
 
+  // scaled vs single-shot performance trend, by month
+  const monthNamesShort2 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthKeysForScaled = [...new Set(same.map(e=>e.start_date.slice(0,7)))].sort();
+  const monthLabelsForScaled = monthKeysForScaled.map(m=>{
+    const [y,mo] = m.split('-');
+    return monthNamesShort2[parseInt(mo,10)-1]+" '"+y.slice(2);
+  });
+  renderHeatmap('scaled-trend-heatmap', ['Single-shot','Scaled'], monthLabelsForScaled, (rowLabel, colLabel) => {
+    const idx = monthLabelsForScaled.indexOf(colLabel);
+    const monthKey = monthKeysForScaled[idx];
+    const wantScaled = rowLabel === 'Scaled';
+    return same.filter(e => e.start_date.slice(0,7) === monthKey && e.scaled_entry === wantScaled);
+  });
+
   // ---- 4. Revenge trading + streaks ----
   const byDayTicker = {};
   same.forEach(e=>{ const k=e.start_date+'|'+e.underlying; (byDayTicker[k]=byDayTicker[k]||[]).push(e); });
@@ -939,6 +1022,29 @@ function renderDashboard(episodes) {
     '<path d="'+areaPath+'" fill="rgba(212,175,106,0.12)" stroke="none"/>'+
     '<path d="'+path+'" fill="none" stroke="#d4af6a" stroke-width="2"/>';
 
+  // ---- 8b. Monthly P&L ----
+  const monthNamesShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const byMonth = {};
+  same.forEach(e=>{ const m = e.start_date.slice(0,7); (byMonth[m]=byMonth[m]||[]).push(e); });
+  const monthKeys = Object.keys(byMonth).sort();
+  const monthGroups = monthKeys.map(m=>{
+    const items = byMonth[m];
+    const [y,mo] = m.split('-');
+    return {
+      label: monthNamesShort[parseInt(mo,10)-1]+" '"+y.slice(2),
+      n: items.length,
+      winRate: items.filter(e=>e.win).length/items.length,
+      totalPnl: items.reduce((s,e)=>s+e.pnl,0),
+    };
+  });
+  renderBarChart('monthly-chart', monthGroups, {valueKey:'totalPnl'});
+  if (monthGroups.length >= 2) {
+    const first = monthGroups[0], last = monthGroups[monthGroups.length-1];
+    document.getElementById('monthly-num').textContent = first.label+' '+fmt$(first.totalPnl)+' → '+last.label+' '+fmt$(last.totalPnl);
+  } else {
+    document.getElementById('monthly-num').textContent = '';
+  }
+
   // ---- 9. Underlying table (split by underlying + instrument type, so a ticker traded both
   //         as options and shares shows up as two distinguishable rows rather than blending) ----
   const byU = {};
@@ -1068,6 +1174,7 @@ function setupFilterBar(episodes){
   applyPreset(defaultPreset);
   setActivePreset(document.querySelector('.preset-btn[data-preset="'+defaultPreset+'"]'));
   applyFilter();
+  renderPeriodComparison(allEpisodes);
 }
 
 function setActivePreset(btn){
@@ -1101,79 +1208,14 @@ function applyFilter(){
   renderDashboard(filtered);
 }
 
-// ============ DATA SOURCE / AUTO-LOAD ============
-// Default location the dashboard tries to auto-load on every page open.
-// Resolution order: ?data= URL param > saved preference (this browser) > DEFAULT_DATA_PATH.
-const DEFAULT_DATA_PATH = 'daytrading-activity.csv';
-function getSavedDataPath(){
-  try { return localStorage.getItem('trading-dashboard-data-path'); } catch(e) { return null; }
-}
-function setSavedDataPath(v){
-  try { localStorage.setItem('trading-dashboard-data-path', v); } catch(e) { /* storage unavailable, ignore */ }
-}
-function resolveDataUrl(){
-  const params = new URLSearchParams(window.location.search);
-  return params.get('data') || getSavedDataPath() || DEFAULT_DATA_PATH;
-}
-
-function setDataStatus(state, text, sub){
-  const dot = document.getElementById('data-status-dot');
-  dot.className = 'data-status-dot' + (state ? ' '+state : '');
-  document.getElementById('data-status-text').textContent = text;
-  document.getElementById('data-status-sub').textContent = sub || '';
-}
-
-function showManualUpload(show, title, sub){
-  document.getElementById('drop-zone').style.display = show ? 'flex' : 'none';
-  if (title) document.getElementById('upload-title').textContent = title;
-  if (sub) document.getElementById('upload-sub').textContent = sub;
-}
-
-function autoLoadData(){
-  const url = resolveDataUrl();
-  const isRemote = /^https?:\/\//i.test(url);
-  const bustUrl = url + (url.includes('?') ? '&' : '?') + '_ts=' + Date.now();
-  setDataStatus('loading', 'Loading '+url+' …', '');
-
-  fetch(bustUrl, {cache:'no-store'})
-    .then(res => {
-      if (!res.ok) throw new Error('HTTP '+res.status);
-      return res.text();
-    })
-    .then(csvText => {
-      Papa.parse(csvText, {
-        header:true, skipEmptyLines:true,
-        complete: (results)=>{
-          if (!results.data.length) throw new Error('File parsed but contained no rows');
-          const episodes = processTrades(results.data);
-          setupFilterBar(episodes);
-          const now = new Date();
-          setDataStatus('ok', 'Loaded from '+url, 'Refreshed '+now.toLocaleTimeString());
-          showManualUpload(false);
-        }
-      });
-    })
-    .catch(err => {
-      console.warn('Auto-load failed:', err);
-      setDataStatus('err', 'Couldn\'t auto-load '+url,
-        isRemote ? String(err.message||err) : 'Not found at that filename, or this page is open locally (file://) — auto-load needs GitHub Pages or a local web server. Check the filename field above and click Save.');
-      document.getElementById('empty-note').style.display = allEpisodes.length ? 'none' : 'block';
-      document.getElementById('empty-note').textContent = 'No data loaded yet — upload a CSV below to generate the dashboard.';
-      showManualUpload(true,
-        'Upload activity export (.csv)',
-        'Auto-load couldn\'t reach "'+url+'". Drop a file here, or fix hosting (see Refresh Data button) and click it again.');
-    });
-}
-
-// ============ FILE HANDLING (manual fallback) ============
+// ============ FILE HANDLING (manual upload) ============
 function handleFile(file){
   Papa.parse(file, {
     header:true, skipEmptyLines:true,
     complete: (results)=>{
       const episodes = processTrades(results.data);
       setupFilterBar(episodes);
-      setDataStatus('ok', 'Loaded from manually uploaded file: '+file.name, 'Refreshed '+new Date().toLocaleTimeString());
-      showManualUpload(false);
+      document.getElementById('empty-note').style.display = 'none';
     }
   });
 }
@@ -1186,22 +1228,7 @@ dz.addEventListener('drop', e=>{
   e.preventDefault(); dz.classList.remove('dragover');
   if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
-document.getElementById('refresh-btn').addEventListener('click', autoLoadData);
-document.getElementById('toggle-upload-btn').addEventListener('click', ()=>{
-  const dz = document.getElementById('drop-zone');
-  const showing = dz.style.display !== 'none';
-  showManualUpload(!showing, 'Upload activity export (.csv)', 'Same format as your broker\'s activities export — TBIL, dividends, and interest rows are filtered out automatically.');
-});
-document.getElementById('data-source-input').value = resolveDataUrl();
 document.getElementById('excluded-input').value = getExcludedSymbols().join(', ');
-function saveDataSource(){
-  const v = document.getElementById('data-source-input').value.trim();
-  if (!v) return;
-  setSavedDataPath(v);
-  autoLoadData();
-}
-document.getElementById('data-source-save-btn').addEventListener('click', saveDataSource);
-document.getElementById('data-source-input').addEventListener('keydown', (e)=>{ if (e.key==='Enter') saveDataSource(); });
 document.getElementById('toggle-excluded-btn').addEventListener('click', ()=>{
   const bar = document.getElementById('excluded-bar');
   bar.style.display = bar.style.display === 'none' ? 'flex' : 'none';
@@ -1209,11 +1236,15 @@ document.getElementById('toggle-excluded-btn').addEventListener('click', ()=>{
 document.getElementById('excluded-save-btn').addEventListener('click', ()=>{
   const list = document.getElementById('excluded-input').value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
   setExcludedSymbols(list);
-  autoLoadData();
+  // re-process whatever's currently loaded, if anything
+  if (allEpisodes.length) {
+    // allEpisodes was built with the old exclusion list; nothing to re-filter from here,
+    // so prompt for re-upload to apply the new list cleanly.
+    document.getElementById('empty-note').style.display = 'block';
+    document.getElementById('empty-note').textContent = 'Excluded symbols updated — re-upload your CSV to apply the change.';
+    document.getElementById('dash').classList.remove('show');
+  }
 });
-
-// Kick off auto-load on page open
-autoLoadData();
 </script>
 </body>
 </html>
