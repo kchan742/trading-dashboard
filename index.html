@@ -145,14 +145,15 @@ License: MIT
   .cal-cell.no-data .cal-daynum{ color:var(--text-faint); }
   .cal-cell.best{ box-shadow:0 0 0 1.5px var(--green) inset; }
   .cal-cell.worst{ box-shadow:0 0 0 1.5px var(--red) inset; }
-  .cal-daynum{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-dim); margin-bottom:5px; }
-  .cal-pnl{ font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; line-height:1.2; }
-  .cal-meta{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text-faint); margin-top:auto; }
+  .cal-daynum{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(255,255,255,0.8); margin-bottom:5px; }
+  .cal-pnl{ font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:700; line-height:1.2; color:#ffffff; }
+  .cal-meta{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.75); margin-top:auto; }
   .cal-week-total{
     border-radius:8px; padding:8px 7px; min-height:64px; background:var(--panel2);
     display:flex; flex-direction:column; justify-content:center; border:1px solid var(--border);
   }
-  .cal-week-total .cal-daynum{ text-transform:uppercase; font-size:9.5px; letter-spacing:.04em; }
+  .cal-week-total .cal-daynum{ text-transform:uppercase; font-size:9.5px; letter-spacing:.04em; color:var(--text-faint); }
+  .cal-week-total .cal-meta{ color:var(--text-faint); }
   @media(max-width:700px){
     .cal-grid{ grid-template-columns:repeat(7,minmax(38px,1fr)) minmax(50px,1fr); gap:4px; }
     .cal-cell, .cal-week-total{ min-height:48px; padding:5px 4px; }
@@ -845,7 +846,7 @@ function renderCalendarMonth(){
         if (date===worstDate) cls += ' worst';
         rowHtml += '<div class="'+cls+'" style="background:'+cellBg(stat.pnl)+';">'+
           '<div class="cal-daynum">'+dayNum+'</div>'+
-          '<div class="cal-pnl '+(stat.pnl>=0?'pos':'neg')+'">'+fmt$(stat.pnl)+'</div>'+
+          '<div class="cal-pnl">'+fmt$(stat.pnl)+'</div>'+
           '<div class="cal-meta">'+stat.n+' trade'+(stat.n===1?'':'s')+' · '+fmtPct(wr)+'</div>'+
         '</div>';
       } else {
