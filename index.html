@@ -118,6 +118,47 @@ License: MIT
     border-radius:6px; font-family:'Inter',sans-serif; font-size:12px; cursor:pointer;
   }
 
+  .cal-panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:22px; margin-bottom:36px;
+  }
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .cal-head h2{ font-family:'Fraunces',serif; font-weight:600; font-size:20px; margin:0; }
+  .cal-nav{ display:flex; align-items:center; gap:10px; }
+  .cal-nav-btn{
+    background:var(--panel2); color:var(--text); border:1px solid var(--border); width:30px; height:30px;
+    border-radius:7px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center;
+  }
+  .cal-nav-btn:disabled{ opacity:0.3; cursor:default; }
+  .cal-nav-btn:not(:disabled):hover{ border-color:var(--gold); }
+  .cal-month-label{ font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; min-width:130px; text-align:center; }
+  .cal-summary{ display:flex; gap:16px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text-faint); flex-wrap:wrap; margin-bottom:14px; }
+  .cal-summary b{ color:var(--text); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr) 1.1fr; gap:6px; }
+  .cal-dow{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); text-align:center; padding-bottom:4px; }
+  .cal-cell{
+    border-radius:8px; padding:8px 7px; min-height:64px; display:flex; flex-direction:column;
+    border:1px solid var(--border); position:relative;
+  }
+  .cal-cell.empty{ background:transparent; border-color:transparent; }
+  .cal-cell.no-data{ background:var(--panel2); }
+  .cal-cell.no-data .cal-daynum{ color:var(--text-faint); }
+  .cal-cell.best{ box-shadow:0 0 0 1.5px var(--green) inset; }
+  .cal-cell.worst{ box-shadow:0 0 0 1.5px var(--red) inset; }
+  .cal-daynum{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-dim); margin-bottom:5px; }
+  .cal-pnl{ font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; line-height:1.2; }
+  .cal-meta{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--text-faint); margin-top:auto; }
+  .cal-week-total{
+    border-radius:8px; padding:8px 7px; min-height:64px; background:var(--panel2);
+    display:flex; flex-direction:column; justify-content:center; border:1px solid var(--border);
+  }
+  .cal-week-total .cal-daynum{ text-transform:uppercase; font-size:9.5px; letter-spacing:.04em; }
+  @media(max-width:700px){
+    .cal-grid{ grid-template-columns:repeat(7,minmax(38px,1fr)) minmax(50px,1fr); gap:4px; }
+    .cal-cell, .cal-week-total{ min-height:48px; padding:5px 4px; }
+    .cal-pnl{ font-size:11px; } .cal-meta{ font-size:9px; } .cal-daynum{ font-size:9.5px; }
+  }
+
   .period-panel{
     background:var(--panel); border:1px solid var(--border); border-radius:12px;
     padding:22px; margin-bottom:36px;
@@ -209,7 +250,14 @@ License: MIT
   .heatmap .cell.empty{ background:transparent !important; color:var(--text-faint); font-size:11px; }
   .heatmap .row-label{ font-size:12.5px; color:var(--text-dim); padding-right:10px; white-space:nowrap; }
 
-  #equity-svg{ width:100%; height:220px; display:block; }
+  #equity-svg{ width:100%; height:220px; display:block; cursor:crosshair; }
+  .equity-hover-bar{
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--text-dim);
+    margin-bottom:10px; min-height:18px;
+  }
+  .equity-hover-bar .ehl{ color:var(--text-faint); margin-right:4px; }
+  .equity-hover-bar b{ color:var(--text); }
+  .equity-hover-bar .pos{ color:var(--green); } .equity-hover-bar .neg{ color:var(--red); }
   .legend{ display:flex; gap:16px; font-size:11.5px; color:var(--text-faint); margin-top:8px; }
   .legend span{ display:inline-flex; align-items:center; gap:5px; }
   .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
@@ -288,6 +336,7 @@ License: MIT
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="instrument-split" id="instrument-split"></div>
     <div id="period-compare"></div>
+    <div id="calendar-view"></div>
 
     <section class="block">
       <div class="block-head"><h2>1 · Time of Day</h2><span class="num" id="tod-num"></span></div>
@@ -403,6 +452,7 @@ License: MIT
     <section class="block">
       <div class="block-head"><h2>9 · Equity Curve</h2></div>
       <div class="panel">
+        <div class="equity-hover-bar" id="equity-hover-bar">Hover the chart to see cumulative stats for any day.</div>
         <svg id="equity-svg" viewBox="0 0 1000 220" preserveAspectRatio="none"></svg>
         <div class="legend"><span><span class="dot" style="background:var(--gold);"></span>Cumulative realized P&amp;L (same-day trades)</span></div>
       </div>
@@ -645,59 +695,355 @@ function cellColorFor(avgPnl, maxAbs){
   const alpha = Math.min(0.85, 0.12 + 0.73*(Math.abs(avgPnl)/maxAbs));
   return avgPnl>=0 ? 'rgba(79,209,165,'+alpha.toFixed(2)+')' : 'rgba(224,104,90,'+alpha.toFixed(2)+')';
 }
+let periodCompareMode = 'trailing90';
+let periodCompareCustom = null; // {aStart,aEnd,bStart,bEnd} once user sets custom range
+let periodCompareEpisodes = []; // cached same-day episodes for recompute on control change
+
+const PERIOD_MODE_LABELS = {
+  trailing30: 'Trailing 30 days vs. prior',
+  trailing60: 'Trailing 60 days vs. prior',
+  trailing90: 'Trailing 90 days vs. prior',
+  trailing180: 'Trailing 180 days vs. prior',
+  thismonth: 'This month vs. last month',
+  thisquarter: 'This quarter vs. last quarter',
+  custom: 'Custom range',
+};
+
+function addDaysUTC(dateStr, days){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(y,m-1,d) + days*86400000).toISOString().slice(0,10);
+}
+
+function computePeriodRanges(same, mode){
+  const dates = [...new Set(same.map(e=>e.start_date))].sort();
+  const maxDate = dates[dates.length-1];
+  const minDate = dates[0];
+
+  if (mode.startsWith('trailing')) {
+    const n = parseInt(mode.replace('trailing',''),10);
+    const cutoff = addDaysUTC(maxDate, -n);
+    return {
+      bStart: addDaysUTC(cutoff, 1), bEnd: maxDate,
+      aStart: minDate, aEnd: cutoff,
+      bLabel: 'Trailing '+n+' Days', aLabel: 'Prior History',
+    };
+  }
+  if (mode === 'thismonth') {
+    const curMonth = maxDate.slice(0,7);
+    const [y,m] = curMonth.split('-').map(Number);
+    const prevMonthDate = new Date(Date.UTC(y, m-2, 1));
+    const prevMonth = prevMonthDate.toISOString().slice(0,7);
+    return {
+      bStart: curMonth+'-01', bEnd: maxDate,
+      aStart: prevMonth+'-01', aEnd: addDaysUTC(curMonth+'-01', -1),
+      bLabel: 'This Month', aLabel: 'Last Month',
+    };
+  }
+  if (mode === 'thisquarter') {
+    const [y,m] = maxDate.split('-').map(Number);
+    const qStartMonth = Math.floor((m-1)/3)*3; // 0,3,6,9
+    const qStart = `${y}-${String(qStartMonth+1).padStart(2,'0')}-01`;
+    const prevQEndDate = addDaysUTC(qStart, -1);
+    const [py,pm] = prevQEndDate.split('-').map(Number);
+    const pqStartMonth = Math.floor((pm-1)/3)*3;
+    const pqStart = `${py}-${String(pqStartMonth+1).padStart(2,'0')}-01`;
+    return {
+      bStart: qStart, bEnd: maxDate,
+      aStart: pqStart, aEnd: prevQEndDate,
+      bLabel: 'This Quarter', aLabel: 'Last Quarter',
+    };
+  }
+  // custom
+  const c = periodCompareCustom || {aStart:minDate, aEnd:maxDate, bStart:minDate, bEnd:maxDate};
+  return {aStart:c.aStart, aEnd:c.aEnd, bStart:c.bStart, bEnd:c.bEnd, aLabel:'Period A', bLabel:'Period B'};
+}
+
+// ============ CALENDAR VIEW ============
+let calendarMonth = null;       // 'YYYY-MM' currently displayed
+let calendarBoundsMin = null;   // 'YYYY-MM' earliest navigable (from slicer range)
+let calendarBoundsMax = null;   // 'YYYY-MM' latest navigable (from slicer range)
+let calendarEpisodesCache = [];
+
+const CAL_MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CAL_DOW_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function renderCalendarView(filteredEpisodes, rangeStartDate, rangeEndDate){
+  calendarEpisodesCache = filteredEpisodes;
+  const minMonth = rangeStartDate.slice(0,7);
+  const maxMonth = rangeEndDate.slice(0,7);
+  calendarBoundsMin = minMonth;
+  calendarBoundsMax = maxMonth;
+  if (!calendarMonth || calendarMonth < minMonth || calendarMonth > maxMonth) {
+    calendarMonth = maxMonth;
+  }
+  renderCalendarMonth();
+}
+
+function shiftMonth(monthStr, delta){
+  const [y,m] = monthStr.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m-1+delta, 1));
+  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
+}
+
+function renderCalendarMonth(){
+  const container = document.getElementById('calendar-view');
+  const same = calendarEpisodesCache.filter(e=>e.same_day);
+  if (!same.length || !calendarMonth) { container.innerHTML = ''; return; }
+
+  const [y,m] = calendarMonth.split('-').map(Number);
+  const dayStats = {}; // 'YYYY-MM-DD' -> {pnl,n,wins}
+  same.forEach(e=>{
+    if (e.start_date.slice(0,7) !== calendarMonth) return;
+    const d = dayStats[e.start_date] = dayStats[e.start_date] || {pnl:0,n:0,wins:0};
+    d.pnl += e.pnl; d.n += 1; if (e.win) d.wins += 1;
+  });
+
+  const tradingDates = Object.keys(dayStats);
+  let bestDate=null, worstDate=null;
+  tradingDates.forEach(d=>{
+    if (bestDate===null || dayStats[d].pnl > dayStats[bestDate].pnl) bestDate = d;
+    if (worstDate===null || dayStats[d].pnl < dayStats[worstDate].pnl) worstDate = d;
+  });
+  let maxAbsCell = 1;
+  tradingDates.forEach(d=>{ maxAbsCell = Math.max(maxAbsCell, Math.abs(dayStats[d].pnl)); });
+
+  const monthTotal = tradingDates.reduce((s,d)=>s+dayStats[d].pnl,0);
+  const monthTrades = tradingDates.reduce((s,d)=>s+dayStats[d].n,0);
+  const monthWins = tradingDates.reduce((s,d)=>s+dayStats[d].wins,0);
+  const monthWinRate = monthTrades ? monthWins/monthTrades : 0;
+  const posDays = tradingDates.filter(d=>dayStats[d].pnl>0).length;
+
+  const firstOfMonth = new Date(Date.UTC(y, m-1, 1));
+  const startDow = firstOfMonth.getUTCDay(); // 0=Sun
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+
+  // build 7-wide grid of {date|null}
+  const cells = [];
+  for (let i=0;i<startDow;i++) cells.push(null);
+  for (let d=1; d<=daysInMonth; d++) cells.push(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  function cellBg(pnl){
+    const alpha = Math.min(0.85, 0.12 + 0.73*(Math.abs(pnl)/maxAbsCell));
+    return pnl>=0 ? 'rgba(79,209,165,'+alpha.toFixed(2)+')' : 'rgba(224,104,90,'+alpha.toFixed(2)+')';
+  }
+
+  let gridHtml = CAL_DOW_LABELS.map(l=>'<div class="cal-dow">'+l+'</div>').join('') + '<div class="cal-dow">Week</div>';
+  for (let row=0; row<cells.length/7; row++){
+    let weekPnl=0, weekTrades=0, weekHasData=false;
+    let rowHtml = '';
+    for (let col=0; col<7; col++){
+      const date = cells[row*7+col];
+      if (!date) { rowHtml += '<div class="cal-cell empty"></div>'; continue; }
+      const dayNum = parseInt(date.slice(8,10),10);
+      const stat = dayStats[date];
+      if (stat) {
+        weekPnl += stat.pnl; weekTrades += stat.n; weekHasData = true;
+        const wr = stat.n ? stat.wins/stat.n : 0;
+        let cls = 'cal-cell';
+        if (date===bestDate) cls += ' best';
+        if (date===worstDate) cls += ' worst';
+        rowHtml += '<div class="'+cls+'" style="background:'+cellBg(stat.pnl)+';">'+
+          '<div class="cal-daynum">'+dayNum+'</div>'+
+          '<div class="cal-pnl '+(stat.pnl>=0?'pos':'neg')+'">'+fmt$(stat.pnl)+'</div>'+
+          '<div class="cal-meta">'+stat.n+' trade'+(stat.n===1?'':'s')+' · '+fmtPct(wr)+'</div>'+
+        '</div>';
+      } else {
+        rowHtml += '<div class="cal-cell no-data"><div class="cal-daynum">'+dayNum+'</div></div>';
+      }
+    }
+    rowHtml += weekHasData
+      ? '<div class="cal-week-total"><div class="cal-daynum">Week</div><div class="cal-pnl '+(weekPnl>=0?'pos':'neg')+'">'+fmt$(weekPnl)+'</div><div class="cal-meta">'+weekTrades+' trades</div></div>'
+      : '<div class="cal-week-total" style="background:transparent; border-color:transparent;"></div>';
+    gridHtml += rowHtml;
+  }
+
+  const canPrev = calendarMonth > calendarBoundsMin;
+  const canNext = calendarMonth < calendarBoundsMax;
+
+  container.innerHTML =
+    '<div class="cal-panel">'+
+      '<div class="cal-head">'+
+        '<h2>Calendar</h2>'+
+        '<div class="cal-nav">'+
+          '<button class="cal-nav-btn" id="cal-prev-btn" '+(canPrev?'':'disabled')+'>‹</button>'+
+          '<div class="cal-month-label">'+CAL_MONTH_NAMES[m-1]+' '+y+'</div>'+
+          '<button class="cal-nav-btn" id="cal-next-btn" '+(canNext?'':'disabled')+'>›</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="cal-summary">'+
+        '<span>Month total: <b class="'+(monthTotal>=0?'pos':'neg')+'">'+fmt$(monthTotal)+'</b></span>'+
+        '<span>Win rate: <b>'+fmtPct(monthWinRate)+'</b></span>'+
+        '<span>Trades: <b>'+monthTrades+'</b></span>'+
+        '<span>Trading days: <b>'+tradingDates.length+'</b></span>'+
+        '<span>Positive days: <b>'+posDays+'/'+tradingDates.length+'</b></span>'+
+      '</div>'+
+      '<div class="cal-grid">'+gridHtml+'</div>'+
+    '</div>';
+
+  const prevBtn = document.getElementById('cal-prev-btn');
+  const nextBtn = document.getElementById('cal-next-btn');
+  if (prevBtn) prevBtn.addEventListener('click', ()=>{ calendarMonth = shiftMonth(calendarMonth,-1); renderCalendarMonth(); });
+  if (nextBtn) nextBtn.addEventListener('click', ()=>{ calendarMonth = shiftMonth(calendarMonth,1); renderCalendarMonth(); });
+}
+
 function renderPeriodComparison(episodes){
+  periodCompareEpisodes = episodes;
   const same = episodes.filter(e=>e.same_day);
   const el = document.getElementById('period-compare');
   if (!same.length) { el.innerHTML = ''; return; }
 
-  const dates = [...same.map(e=>e.start_date)].sort();
-  const maxDate = dates[dates.length-1];
-  const [my,mm,md] = maxDate.split('-').map(Number);
-  const cutoffMs = Date.UTC(my,mm-1,md) - 90*86400000;
-  const cutoff = new Date(cutoffMs).toISOString().slice(0,10);
+  const dates = [...new Set(same.map(e=>e.start_date))].sort();
+  const minDate = dates[0], maxDate = dates[dates.length-1];
 
-  const recent = same.filter(e=>e.start_date > cutoff);
-  const prior = same.filter(e=>e.start_date <= cutoff);
+  if (periodCompareMode === 'custom' && !periodCompareCustom) {
+    // sensible default: second half of history vs first half
+    const midIdx = Math.floor(dates.length/2);
+    periodCompareCustom = {aStart:minDate, aEnd:dates[midIdx-1]||minDate, bStart:dates[midIdx]||maxDate, bEnd:maxDate};
+  }
+
+  const ranges = computePeriodRanges(same, periodCompareMode);
+  const a = same.filter(e=>e.start_date>=ranges.aStart && e.start_date<=ranges.aEnd);
+  const b = same.filter(e=>e.start_date>=ranges.bStart && e.start_date<=ranges.bEnd);
 
   function stat(items){
     return {n:items.length, pnl:items.reduce((s,e)=>s+e.pnl,0), winRate: items.length?items.filter(e=>e.win).length/items.length:0};
   }
-  const r = stat(recent), p = stat(prior);
+  const sa = stat(a), sb = stat(b);
 
-  if (p.n === 0) {
-    el.innerHTML = '<div class="period-panel"><div class="period-head"><h2>Period Comparison</h2></div>'+
-      '<div style="color:var(--text-faint); font-size:13px;">Not enough trading history before the last 90 days yet for a comparison — check back once you have a longer track record.</div></div>';
+  const modeOptionsHtml = Object.keys(PERIOD_MODE_LABELS).map(k=>
+    '<option value="'+k+'"'+(k===periodCompareMode?' selected':'')+'>'+PERIOD_MODE_LABELS[k]+'</option>'
+  ).join('');
+
+  let customRangeHtml = '';
+  if (periodCompareMode === 'custom') {
+    const c = periodCompareCustom;
+    customRangeHtml =
+      '<div class="date-picker-row" style="margin-top:10px;">'+
+        '<label>Period A: <input type="date" id="pc-a-start" class="filter-select" value="'+c.aStart+'" min="'+minDate+'" max="'+maxDate+'"> to '+
+        '<input type="date" id="pc-a-end" class="filter-select" value="'+c.aEnd+'" min="'+minDate+'" max="'+maxDate+'"></label>'+
+        '<label>Period B: <input type="date" id="pc-b-start" class="filter-select" value="'+c.bStart+'" min="'+minDate+'" max="'+maxDate+'"> to '+
+        '<input type="date" id="pc-b-end" class="filter-select" value="'+c.bEnd+'" min="'+minDate+'" max="'+maxDate+'"></label>'+
+      '</div>';
+  }
+
+  const headerHtml =
+    '<div class="period-head"><h2>Period Comparison</h2>'+
+      '<select class="filter-select" id="pc-mode-select">'+modeOptionsHtml+'</select>'+
+    '</div>' + customRangeHtml;
+
+  if (sa.n === 0 || sb.n === 0) {
+    el.innerHTML = '<div class="period-panel">'+headerHtml+
+      '<div style="color:var(--text-faint); font-size:13px; margin-top:14px;">Not enough trading days in one or both periods for a comparison. '+
+      (periodCompareMode==='custom' ? 'Adjust the date ranges above.' : 'Try a shorter window, or switch to Custom range.')+'</div></div>';
+    bindPeriodCompareControls();
     return;
   }
 
-  const pnlDelta = r.pnl - p.pnl;
-  const wrDeltaPts = (r.winRate - p.winRate) * 100;
-  const priorDates = prior.map(e=>e.start_date).sort();
-  const recentDates = recent.map(e=>e.start_date).sort();
-
+  const pnlDelta = sb.pnl - sa.pnl;
+  const wrDeltaPts = (sb.winRate - sa.winRate) * 100;
   const deltaColor = pnlDelta >= 0 ? 'var(--green)' : 'var(--red)';
   const deltaArrow = pnlDelta >= 0 ? '▲' : '▼';
 
   el.innerHTML =
     '<div class="period-panel">'+
-      '<div class="period-head"><h2>Period Comparison</h2><span class="num">last 90 days vs. everything before</span></div>'+
-      '<div class="period-cols">'+
+      headerHtml+
+      '<div class="period-cols" style="margin-top:14px;">'+
         '<div class="period-col">'+
-          '<div class="plabel">Prior History</div>'+
-          '<div class="pdaterange">'+fmtDateShort(priorDates[0])+' → '+fmtDateShort(priorDates[priorDates.length-1])+'</div>'+
-          '<div class="pval '+(p.pnl>=0?'pos':'neg')+'">'+fmt$(p.pnl)+'</div>'+
-          '<div class="psub">'+fmtPct(p.winRate)+' win · '+p.n+' trades</div>'+
+          '<div class="plabel">'+ranges.aLabel+'</div>'+
+          '<div class="pdaterange">'+fmtDateShort(ranges.aStart)+' → '+fmtDateShort(ranges.aEnd)+'</div>'+
+          '<div class="pval '+(sa.pnl>=0?'pos':'neg')+'">'+fmt$(sa.pnl)+'</div>'+
+          '<div class="psub">'+fmtPct(sa.winRate)+' win · '+sa.n+' trades</div>'+
         '</div>'+
         '<div class="period-arrow">→</div>'+
         '<div class="period-col">'+
-          '<div class="plabel">Last 90 Days</div>'+
-          '<div class="pdaterange">'+fmtDateShort(recentDates[0])+' → '+fmtDateShort(recentDates[recentDates.length-1])+'</div>'+
-          '<div class="pval '+(r.pnl>=0?'pos':'neg')+'">'+fmt$(r.pnl)+'</div>'+
-          '<div class="psub">'+fmtPct(r.winRate)+' win · '+r.n+' trades</div>'+
+          '<div class="plabel">'+ranges.bLabel+'</div>'+
+          '<div class="pdaterange">'+fmtDateShort(ranges.bStart)+' → '+fmtDateShort(ranges.bEnd)+'</div>'+
+          '<div class="pval '+(sb.pnl>=0?'pos':'neg')+'">'+fmt$(sb.pnl)+'</div>'+
+          '<div class="psub">'+fmtPct(sb.winRate)+' win · '+sb.n+' trades</div>'+
         '</div>'+
       '</div>'+
-      '<div class="period-delta" style="color:'+deltaColor+';">'+deltaArrow+' '+fmt$(Math.abs(pnlDelta))+' '+(pnlDelta>=0?'better':'worse')+' than prior history, win rate '+(wrDeltaPts>=0?'+':'')+wrDeltaPts.toFixed(1)+' pts</div>'+
+      '<div class="period-delta" style="color:'+deltaColor+';">'+deltaArrow+' '+fmt$(Math.abs(pnlDelta))+' '+(pnlDelta>=0?'better':'worse')+' than '+ranges.aLabel.toLowerCase()+', win rate '+(wrDeltaPts>=0?'+':'')+wrDeltaPts.toFixed(1)+' pts</div>'+
     '</div>';
+  bindPeriodCompareControls();
+}
+
+function bindPeriodCompareControls(){
+  const sel = document.getElementById('pc-mode-select');
+  if (sel) sel.addEventListener('change', (e)=>{
+    periodCompareMode = e.target.value;
+    renderPeriodComparison(periodCompareEpisodes);
+  });
+  ['pc-a-start','pc-a-end','pc-b-start','pc-b-end'].forEach(id=>{
+    const inp = document.getElementById(id);
+    if (inp) inp.addEventListener('change', ()=>{
+      periodCompareCustom = {
+        aStart: document.getElementById('pc-a-start').value,
+        aEnd: document.getElementById('pc-a-end').value,
+        bStart: document.getElementById('pc-b-start').value,
+        bEnd: document.getElementById('pc-b-end').value,
+      };
+      renderPeriodComparison(periodCompareEpisodes);
+    });
+  });
+}
+
+// ============ EQUITY CURVE HOVER ============
+let equityHoverState = null;
+let equityHoverBound = false;
+
+function updateEquityHoverBar(idx){
+  const bar = document.getElementById('equity-hover-bar');
+  if (!bar) return;
+  if (!equityHoverState || idx === null || idx < 0 || idx >= equityHoverState.sortedDays.length) {
+    bar.innerHTML = 'Hover the chart to see cumulative stats for any day.';
+    const layer = document.getElementById('equity-hover-layer');
+    if (layer) layer.innerHTML = '';
+    return;
+  }
+  const st = equityHoverState;
+  const date = st.sortedDays[idx];
+  const cumPnl = st.points[idx];
+  const dayPnl = st.dailyPnl[date] || 0;
+  const trades = st.cumTradesArr[idx];
+  const winRate = st.cumWinRateArr[idx];
+  bar.innerHTML =
+    '<span class="ehl">'+fmtDateShort(date)+'</span>'+
+    '<span class="ehl">P&L to date:</span><b class="'+(cumPnl>=0?'pos':'neg')+'">'+fmt$(cumPnl)+'</b> &nbsp;'+
+    '<span class="ehl">that day:</span><b class="'+(dayPnl>=0?'pos':'neg')+'">'+fmt$(dayPnl)+'</b> &nbsp;'+
+    '<span class="ehl">win rate to date:</span><b>'+fmtPct(winRate)+'</b> &nbsp;'+
+    '<span class="ehl">trades to date:</span><b>'+trades+'</b>';
+
+  const x = st.pad + idx*st.xStep;
+  const y = st.yOf(cumPnl);
+  const layer = document.getElementById('equity-hover-layer');
+  if (layer) {
+    layer.innerHTML =
+      '<line x1="'+x.toFixed(1)+'" y1="0" x2="'+x.toFixed(1)+'" y2="'+st.h+'" stroke="#6b6860" stroke-width="1" stroke-dasharray="3,3"/>'+
+      '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4" fill="#d4af6a" stroke="#0d0f14" stroke-width="1.5"/>';
+  }
+}
+
+function bindEquityHoverOnce(){
+  if (equityHoverBound) return;
+  equityHoverBound = true;
+  const svg = document.getElementById('equity-svg');
+  svg.addEventListener('mousemove', (e)=>{
+    if (!equityHoverState || !equityHoverState.points.length) return;
+    const rect = svg.getBoundingClientRect();
+    const relX = (e.clientX - rect.left) / rect.width * equityHoverState.w;
+    const idx = Math.round((relX - equityHoverState.pad) / equityHoverState.xStep);
+    updateEquityHoverBar(Math.max(0, Math.min(equityHoverState.points.length-1, idx)));
+  });
+  svg.addEventListener('mouseleave', ()=> updateEquityHoverBar(null));
+  // touch support
+  svg.addEventListener('touchmove', (e)=>{
+    if (!equityHoverState || !equityHoverState.points.length || !e.touches[0]) return;
+    const rect = svg.getBoundingClientRect();
+    const relX = (e.touches[0].clientX - rect.left) / rect.width * equityHoverState.w;
+    const idx = Math.round((relX - equityHoverState.pad) / equityHoverState.xStep);
+    updateEquityHoverBar(Math.max(0, Math.min(equityHoverState.points.length-1, idx)));
+  }, {passive:true});
 }
 
 function renderHeatmap(containerId, rowLabels, colLabels, itemsFn) {
@@ -1006,8 +1352,19 @@ function renderDashboard(episodes) {
 
   // ---- 8. Equity curve ----
   const sortedDays = Object.keys(dailyPnl).sort();
-  let cum = 0;
-  const points = sortedDays.map(d=>{ cum += dailyPnl[d]; return cum; });
+  let cum = 0, cumTrades = 0, cumWins = 0;
+  const points = [];
+  const cumTradesArr = [];
+  const cumWinRateArr = [];
+  sortedDays.forEach(d=>{
+    const dayItems = byDay[d] || [];
+    cum += dailyPnl[d];
+    cumTrades += dayItems.length;
+    cumWins += dayItems.filter(e=>e.win).length;
+    points.push(cum);
+    cumTradesArr.push(cumTrades);
+    cumWinRateArr.push(cumTrades ? cumWins/cumTrades : 0);
+  });
   const svg = document.getElementById('equity-svg');
   const w=1000,h=220,pad=10;
   const minV = Math.min(0,...points), maxV = Math.max(0,...points);
@@ -1020,7 +1377,12 @@ function renderDashboard(episodes) {
   svg.innerHTML =
     '<line x1="'+pad+'" y1="'+zeroY.toFixed(1)+'" x2="'+(w-pad)+'" y2="'+zeroY.toFixed(1)+'" stroke="#2a2e38" stroke-width="1"/>'+
     '<path d="'+areaPath+'" fill="rgba(212,175,106,0.12)" stroke="none"/>'+
-    '<path d="'+path+'" fill="none" stroke="#d4af6a" stroke-width="2"/>';
+    '<path d="'+path+'" fill="none" stroke="#d4af6a" stroke-width="2"/>'+
+    '<g id="equity-hover-layer"></g>';
+
+  // shared state read by the (once-bound) hover handlers below
+  equityHoverState = { sortedDays, points, dailyPnl, cumTradesArr, cumWinRateArr, w, h, pad, xStep, yOf };
+  updateEquityHoverBar(null);
 
   // ---- 8b. Monthly P&L ----
   const monthNamesShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1206,6 +1568,7 @@ function applyFilter(){
   fill.style.width = Math.max(0, (pctEnd - pctStart)) + '%';
 
   renderDashboard(filtered);
+  renderCalendarView(filtered, startDate, endDate);
 }
 
 // ============ FILE HANDLING (manual upload) ============
@@ -1215,6 +1578,7 @@ function handleFile(file){
     complete: (results)=>{
       const episodes = processTrades(results.data);
       setupFilterBar(episodes);
+      bindEquityHoverOnce();
       document.getElementById('empty-note').style.display = 'none';
     }
   });
